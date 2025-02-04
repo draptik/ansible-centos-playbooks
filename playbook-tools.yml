@@ -36,12 +36,6 @@
         validate: 'visudo -cf %s'
         mode: '0440'
 
-    - name: Copy SSH public keys if not already present
-      authorized_key:
-        user: "{{ ansible_user }}"
-        state: present
-        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-
     - name: Ensure alias is set globally (so that all users have the alias)
       lineinfile:
         path: "/etc/profile.d/custom_aliases.sh"
