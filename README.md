@@ -1,0 +1,3 @@
+# Ansible Playbooks for CentOS Stream 10
+
+Some ideas for setting up CentOS VMs with Ansible...

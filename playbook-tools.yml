@@ -1,11 +1,54 @@
 ---
-- name: Install useful tools on CentOS 10
+- name: Configure CentOS 10 target VMs
   hosts: all
   become: yes
   vars:
     ansible_python_interpreter: /usr/bin/python3
+    ansible_user: "patrick"
 
   tasks:
+
+    - name: Enable CRB repository
+      command: "dnf config-manager --set-enabled crb"
+      changed_when: false
+
+    - name: Enable EPEL repository
+      dnf:
+        name: epel-release
+        state: present
+
+    - name: Remove subscription-manager package
+      dnf:
+        name: subscription-manager
+        state: absent
+
+    - name: Add default user to wheel group
+      user:
+        name: "{{ ansible_user }}"
+        groups: wheel
+        append: yes
+
+    - name: Enable passwordless sudo for wheel group
+      lineinfile:
+        path: /etc/sudoers.d/wheel-nopasswd
+        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+        create: yes
+        validate: 'visudo -cf %s'
+        mode: '0440'
+
+    - name: Copy SSH public keys if not already present
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Ensure alias is set globally (so that all users have the alias)
+      lineinfile:
+        path: "/etc/profile.d/custom_aliases.sh"
+        line: "alias l='ls -alh'"
+        create: yes
+        mode: '0644'
+
     - name: Ensure packages are installed
       package:
         name:
@@ -15,11 +58,3 @@
           - bat
           - jq
         state: present
-
-    - name: Ensure alias is set globally
-      lineinfile:
-        path: "/etc/profile.d/custom_aliases.sh"
-        line: "alias l='ls -alh'"
-        create: yes
-        mode: '0644'
-
