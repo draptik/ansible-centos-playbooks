@@ -16,3 +16,10 @@
           - jq
         state: present
 
+    - name: Ensure alias is set globally
+      lineinfile:
+        path: "/etc/profile.d/custom_aliases.sh"
+        line: "alias l='ls -alh'"
+        create: yes
+        mode: '0644'
+
