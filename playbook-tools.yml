@@ -1,0 +1,14 @@
+---
+- name: Install useful tools on CentOS 10
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Ensure packages are installed
+      package:
+        name:
+          - git
+          - ripgrep
+          - tmux
+        state: present
+
