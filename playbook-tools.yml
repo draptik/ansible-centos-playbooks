@@ -12,5 +12,7 @@
           - git
           - ripgrep
           - tmux
+          - bat
+          - jq
         state: present
 
