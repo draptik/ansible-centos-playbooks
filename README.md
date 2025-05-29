@@ -2,8 +2,9 @@
 
 This repository automates the setup of a CentOS Stream 10 VM using Ansible. It performs:
 
-- Base system setup with useful tools and configuration
-- Rootless Podman installation integration
+- CentOS base system setup (repositories, dev tools)
+- General Linux configuration (aliases, CLI utilities)
+- Rootless Podman installation and integration
 
 ---
 
@@ -23,7 +24,6 @@ This repository automates the setup of a CentOS Stream 10 VM using Ansible. It p
     chmod 0440 /etc/sudoers.d/wheel-nopasswd
     ```
 
-
 ---
 
 ## 📁 Project Structure
@@ -35,15 +35,18 @@ ansible-centos-playbooks/
 │   └── development/
 │       └── hosts.ini              # Inventory file for development environment
 ├── playbooks/
-│   ├── setup-base.yml             # Playbook: Base system setup
+│   ├── setup-base.yml             # Playbook: Base system setup (common + system)
 │   └── install-podman.yml         # Playbook: Podman install and config
 ├── roles/
 │   ├── common/
 │   │   └── tasks/
-│   │       └── main.yml           # Tasks for CentOS base system setup
+│   │       └── main.yml           # CentOS-specific setup (repos, dev tools)
+│   ├── system/
+│   │   └── tasks/
+│   │       └── main.yml           # General config (CLI tools, aliases)
 │   └── podman/
 │       └── tasks/
-│           └── main.yml           # Tasks for rootless Podman setup
+│           └── main.yml           # Rootless Podman setup
 ├── site.yml                       # Aggregates both playbooks
 ├── run-playbook-tools.sh          # Script to run setup-base.yml
 └── README.md                      # This documentation
@@ -53,12 +56,15 @@ ansible-centos-playbooks/
 
 ## ✅ What It Does
 
-### CentOS Base Setup (`common` role)
+### CentOS Setup (`common` role)
 
 - Enables CRB and EPEL repositories
 - Removes `subscription-manager`
-- Installs development tools group
-- Installs CLI tools:
+- Installs the "Development Tools" group
+
+### General Linux Setup (`system` role)
+
+- Installs useful CLI tools:
   - `git`
   - `tmux`
   - `jq`
@@ -94,7 +100,7 @@ moth ansible_host=192.168.1.100 ansible_user=ansible_user
 Make sure:
 
 - The `ansible_user` user exists
-- `ansible_user` is in the `wheel` group
+- `ansible_user` is in the `wheel` group with passwordless sudo
 - SSH access is available
 
 ---
@@ -105,7 +111,7 @@ Make sure:
 ./run-playbook-tools.sh
 ```
 
-This runs `playbooks/setup-base.yml` via the `common` role.
+This runs `playbooks/setup-base.yml`, which applies both the `common` and `system` roles.
 
 ---
 
@@ -125,7 +131,7 @@ This runs the `podman` role to configure rootless Podman.
 ansible-playbook site.yml
 ```
 
-This runs both the base system and Podman setup.
+This runs all roles: base system setup and Podman.
 
 ---
 
