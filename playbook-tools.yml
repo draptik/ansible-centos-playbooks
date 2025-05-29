@@ -8,9 +8,13 @@
 
   tasks:
 
-    - name: Enable CRB repository
-      command: "dnf config-manager --set-enabled crb"
-      changed_when: false
+    - name: Refresh package metadata
+      dnf:
+        update_cache: yes
+
+    - name: Enable CRB repository via dnf config-manager (fallback)
+      command: dnf config-manager --set-enabled crb
+      when: not ansible_facts.packages['centos-stream-crb'] is defined
 
     - name: Enable EPEL repository
       dnf:
@@ -21,6 +25,11 @@
       dnf:
         name: subscription-manager
         state: absent
+
+    - name: Install Development Tools group (optional)
+      dnf:
+        name: "@Development Tools"
+        state: present
 
     - name: Add default user to wheel group
       user:
@@ -39,7 +48,7 @@
     - name: Ensure alias is set globally (so that all users have the alias)
       lineinfile:
         path: "/etc/profile.d/custom_aliases.sh"
-        line: "alias l='ls -alh'"
+        line: "alias l='ls -alh'\n"
         create: yes
         mode: '0644'
 
