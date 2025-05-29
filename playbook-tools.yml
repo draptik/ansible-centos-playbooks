@@ -31,20 +31,6 @@
         name: "@Development Tools"
         state: present
 
-    - name: Add default user to wheel group
-      user:
-        name: "{{ ansible_user }}"
-        groups: wheel
-        append: yes
-
-    - name: Enable passwordless sudo for wheel group
-      lineinfile:
-        path: /etc/sudoers.d/wheel-nopasswd
-        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
-        create: yes
-        validate: 'visudo -cf %s'
-        mode: '0440'
-
     - name: Ensure alias is set globally (so that all users have the alias)
       lineinfile:
         path: "/etc/profile.d/custom_aliases.sh"
