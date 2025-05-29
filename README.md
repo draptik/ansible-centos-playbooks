@@ -1,99 +1,151 @@
-# Ansible CentOS Base Setup
+# Ansible CentOS Setup with Rootless Podman
 
-This project automates the initial setup of a CentOS Stream 10 VM using Ansible. It prepares the system for container-based workloads (e.g., Podman, Nextcloud) by configuring repositories, installing essential tools, and applying basic system preferences.
+This repository automates the setup of a CentOS Stream 10 VM using Ansible. It performs:
+
+- Base system setup with useful tools and configuration
+- Rootless Podman installation integration
+
+---
 
 ## 📚 Requirements
 
 - Ansible 2.14+ (tested with Ansible Core 2.18)
-- Python 3 installed on the target (`/usr/bin/python3`)
-- SSH access to the CentOS target machine(s)
-  - `sudo` access for the remote user (`patrick`)
-  - Ensure to `ssh-copy-id ~/.ssh/some-key.pub username@target-system` before applying any playbook.
-- Ensure the ansible user has passwordless sudo permissions.
-  - The vm user was setup with sudo permissions during the vm setup
-  - The vm user is part of the wheel group, then:
+- CentOS Stream 10 VM
+- Python 3 installed on the VM (`/usr/bin/python3`)
+- SSH access to the VM using a non-root user (e.g., `ansible_user`)
+- The Ansible user **must be in the `wheel` group with passwordless sudo**
+  - This is required for Ansible to run privileged tasks non-interactively
+  - You can configure it manually with:
 
-    ```sh
-    echo "%wheel ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/wheel-nopasswd
+    ```bash
+    usermod -aG wheel ansible_user
+    echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel-nopasswd
+    chmod 0440 /etc/sudoers.d/wheel-nopasswd
     ```
+
+
+---
 
 ## 📁 Project Structure
 
 ```text
 ansible-centos-playbooks/
-├── ansible.cfg                     # Ansible configuration (inventory, roles path, etc.)
+├── ansible.cfg                    # Ansible config (inventory path, roles path, etc.)
 ├── inventories/
 │   └── development/
-│       └── hosts.ini              # List of target hosts
+│       └── hosts.ini              # Inventory file for development environment
 ├── playbooks/
-│   └── setup-base.yml            # Entry point playbook for base system setup
+│   ├── setup-base.yml             # Playbook: Base system setup
+│   └── install-podman.yml         # Playbook: Podman install and config
 ├── roles/
-│   └── common/
+│   ├── common/
+│   │   └── tasks/
+│   │       └── main.yml           # Tasks for CentOS base system setup
+│   └── podman/
 │       └── tasks/
-│           └── main.yml          # Role logic for base system configuration
-├── site.yml                       # Aggregates multiple playbooks (optional)
-├── run-playbook-tools.sh          # Shell script to run the base setup playbook
-└── README.md                      # This documentation file
+│           └── main.yml           # Tasks for rootless Podman setup
+├── site.yml                       # Aggregates both playbooks
+├── run-playbook-tools.sh          # Script to run setup-base.yml
+└── README.md                      # This documentation
 ```
 
 ---
 
 ## ✅ What It Does
 
-The `common` role performs the following tasks on the target CentOS VM:
+### CentOS Base Setup (`common` role)
 
 - Enables CRB and EPEL repositories
-- Removes the `subscription-manager` package
+- Removes `subscription-manager`
 - Installs development tools group
-- Installs common CLI utilities:
-  - git
-  - tmux
-  - jq
-  - bat
-  - ripgrep
-- Sets a global shell alias:
+- Installs CLI tools:
+  - `git`
+  - `tmux`
+  - `jq`
+  - `bat`
+  - `ripgrep`
+- Adds a global alias:
 
   ```bash
   alias l='ls -alh'
   ```
-- Prepares the system for running containerized services like Podman and Nextcloud
+
+### Podman Setup (`podman` role)
+
+- Installs `podman`, `slirp4netns`, and `fuse-overlayfs`
+- Enables systemd lingering for the user so containers can run after logout
+- Creates `~/.config/systemd/user/`
+- Starts and enables `podman.socket` (rootless API socket)
+- Uses systemd user scope and sets `XDG_RUNTIME_DIR` automatically
 
 ---
 
 ## 🚀 Usage
 
-### 1. Set up your inventory
+### 1. Inventory Setup
 
-Edit `inventories/development/hosts.ini` to list your VM(s). Example:
+Edit `inventories/development/hosts.ini`:
 
 ```ini
-[moth]
-moth ansible_host=192.168.1.100 ansible_user=patrick
+[centos]
+moth ansible_host=192.168.1.100 ansible_user=ansible_user
 ```
 
-Make sure the `patrick` user is in the `wheel` group and has `sudo` access.
+Make sure:
 
-### 2. Run the base setup playbook
+- The `ansible_user` user exists
+- `ansible_user` is in the `wheel` group
+- SSH access is available
+
+---
+
+### 2. Run Base Setup Only
 
 ```bash
 ./run-playbook-tools.sh
 ```
 
-This will run the `playbooks/setup-base.yml` playbook, which applies the `common` role to the target VM.
+This runs `playbooks/setup-base.yml` via the `common` role.
 
 ---
 
-## 🛠️ Next Steps
+### 3. Run Podman Setup Only
 
-Extend the project by adding more roles and playbooks:
+```bash
+ansible-playbook playbooks/install-podman.yml
+```
 
-- `roles/podman` – Install and configure rootless Podman
-- `roles/nextcloud` – Deploy and manage a Nextcloud instance
-- `roles/database` – Set up MariaDB or PostgreSQL
-- `roles/reverse_proxy` – Handle HTTPS with Caddy, Nginx, or Traefik
+This runs the `podman` role to configure rootless Podman.
 
-Other enhancements:
+---
 
-- Add separate inventories for staging and production
-- Use `ansible-vault` to secure secrets
-- Modularize common setup tasks into reusable roles
+### 4. Run Full Setup
+
+```bash
+ansible-playbook site.yml
+```
+
+This runs both the base system and Podman setup.
+
+---
+
+## 🔍 Verifying Podman Setup
+
+SSH into the target system as the user (e.g., `ansible_user`), and run:
+
+```bash
+podman info --log-level=error
+systemctl --user status podman.socket
+```
+
+You can also test with:
+
+```bash
+podman run --rm docker.io/library/hello-world
+```
+
+---
+
+## 🤝 License
+
+MIT License – use and adapt freely.
