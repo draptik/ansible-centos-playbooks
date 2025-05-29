@@ -7,9 +7,10 @@
       - fuse-overlayfs
     state: present
 
-- name: Enable lingering for user
-  become: yes
-  command: loginctl enable-linger {{ ansible_user }}
+- name: Check if lingering is already enabled
+  command: "loginctl show-user {{ ansible_user }} -p Linger"
+  register: linger_status
+  changed_when: false
 
 - name: Create systemd user directory for non-root user
   become: false
