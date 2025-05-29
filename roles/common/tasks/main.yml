@@ -1,0 +1,46 @@
+---
+  - name: Refresh package metadata
+    dnf:
+      update_cache: yes
+
+  - name: Check if CRB repository is enabled
+    command: dnf repolist enabled
+    register: enabled_repos
+    changed_when: false
+
+  - name: Enable CRB repository only if not already enabled
+    command: dnf config-manager --set-enabled crb
+    when: "'crb' not in enabled_repos.stdout"
+    changed_when: "'crb' not in enabled_repos.stdout"
+
+  - name: Enable EPEL repository
+    dnf:
+      name: epel-release
+      state: present
+
+  - name: Remove subscription-manager package
+    dnf:
+      name: subscription-manager
+      state: absent
+
+  - name: Install Development Tools group (optional)
+    dnf:
+      name: "@Development Tools"
+      state: present
+
+  - name: Ensure alias is set globally (so that all users have the alias)
+    lineinfile:
+      path: "/etc/profile.d/custom_aliases.sh"
+      line: "alias l='ls -alh'\n"
+      create: yes
+      mode: '0644'
+
+  - name: Ensure packages are installed
+    package:
+      name:
+        - git
+        - ripgrep
+        - tmux
+        - bat
+        - jq
+      state: present
