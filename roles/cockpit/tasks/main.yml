@@ -1,0 +1,15 @@
+---
+- name: Install Cockpit and modules
+  package:
+    name:
+      - cockpit
+      - cockpit-podman
+      - cockpit-storaged
+      - cockpit-networkmanager
+    state: present
+
+- name: Enable and start cockpit socket
+  systemd:
+    name: cockpit.socket
+    enabled: yes
+    state: started
