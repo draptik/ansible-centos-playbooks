@@ -1,0 +1,17 @@
+---
+- name: Ensure alias is set globally (so that all users have the alias)
+  lineinfile:
+    path: "/etc/profile.d/custom_aliases.sh"
+    line: "alias l='ls -alh'"
+    create: yes
+    mode: '0644'
+
+- name: Ensure packages are installed
+  package:
+    name:
+      - git
+      - ripgrep
+      - tmux
+      - bat
+      - jq
+    state: present

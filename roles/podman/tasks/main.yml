@@ -1,0 +1,49 @@
+- name: Install Podman and dependencies
+  become: yes
+  package:
+    name:
+      - podman
+      - slirp4netns
+      - fuse-overlayfs
+    state: present
+
+- name: Check if lingering is already enabled
+  command: "loginctl show-user {{ ansible_user }} -p Linger"
+  register: linger_status
+  changed_when: false
+
+- name: Create systemd user directory for non-root user
+  become: false
+  file:
+    path: "/home/{{ ansible_user }}/.config/systemd/user"
+    state: directory
+    mode: "0755"
+
+- name: Get UID of {{ ansible_user }}
+  command: "id -u {{ ansible_user }}"
+  register: podman_uid
+  changed_when: false
+
+- name: Enable Podman socket (rootless)
+  become: false
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_uid.stdout }}"
+  systemd:
+    name: podman.socket
+    scope: user
+    enabled: true
+    state: started
+
+- name: Check if podman command works
+  become: false
+  command: podman info --log-level=error
+  register: podman_check
+  changed_when: false
+  failed_when: podman_check.rc != 0
+
+- name: Check if podman.socket is active (systemd user)
+  become: false
+  command: systemctl --user is-active podman.socket
+  register: podman_socket_status
+  changed_when: false
+  failed_when: podman_socket_status.stdout != "active"
