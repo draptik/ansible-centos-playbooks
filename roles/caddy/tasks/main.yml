@@ -1,0 +1,42 @@
+---
+- name: Create Caddy volume directories
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ caddy_config_dir }}"
+    - "{{ caddy_data_dir }}"
+
+- name: Deploy Caddyfile
+  become: false
+  template:
+    src: Caddyfile.j2
+    dest: "{{ caddy_config_dir }}/Caddyfile"
+    mode: "0644"
+
+- name: Ensure Caddy config subdirectory exists
+  become: false
+  file:
+    path: "{{ caddy_data_dir }}/config"
+    state: directory
+    mode: "0755"
+
+- name: Run Caddy container
+  become: false
+  containers.podman.podman_container:
+    name: caddy
+    image: docker.io/library/caddy:latest
+    state: started
+    restart_policy: always
+    network: host
+    ports:
+      - "80:80"
+      - "443:443"
+    capabilities:
+      - CAP_NET_BIND_SERVICE
+    volumes:
+      - "{{ caddy_config_dir }}/Caddyfile:/etc/caddy/Caddyfile:ro"
+      - "{{ caddy_data_dir }}:/data"
+      - "{{ caddy_data_dir }}/config:/config"
