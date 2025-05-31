@@ -1,0 +1,22 @@
+# Ansible retry files (if enabled)
+*.retry
+
+# Vault password file
+vault_pass.txt
+
+# Fact caching (if enabled)
+.ansible_cache/
+
+# Editor/OS files
+*.swp
+*.swo
+*.bak
+*~
+
+# Logs or output files (if you log runs)
+logs/
+*.log
+
+# Virtual environments (if using one)
+.venv/
+env/
