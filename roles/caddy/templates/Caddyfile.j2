@@ -1,0 +1,11 @@
+{{ readeck_domain }} {
+  reverse_proxy 127.0.0.1:{{ readeck_port }}
+
+  header {
+    Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "no-referrer-when-downgrade"
+  }
+}
+

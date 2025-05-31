@@ -1,4 +1,17 @@
 ---
+- name: Setup all roles
+  hosts: all
+  become: yes
+  pre_tasks:
+    - name: Load vault variables
+      include_vars: inventories/development/group_vars/vault.yml
+
+  roles:
+    - common
+    - podman
+    - caddy
+
 - import_playbook: playbooks/setup-base.yml
 - import_playbook: playbooks/install-podman.yml
 - import_playbook: playbooks/install-cockpit.yml
+- import_playbook: playbooks/install-caddy.yml
