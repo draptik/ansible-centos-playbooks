@@ -1,7 +1,1 @@
----
-- name: Install and run Caddy in Podman
-  hosts: all
-  become: yes
 
-  roles:
-    - caddy
