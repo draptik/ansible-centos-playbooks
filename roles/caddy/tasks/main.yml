@@ -12,14 +12,91 @@
     owner: "{{ ansible_user }}"
     mode: '0644'
 
-- name: Run Caddy in Podman
+- name: Debug important variables before running Caddy container
+  debug:
+    msg:
+      - "ansible_user: {{ ansible_user }}"
+      - "caddy_config_dir: {{ caddy_config_dir }}"
+
+- name: Stat Caddyfile on remote host
+  stat:
+    path: "{{ caddy_config_dir }}/Caddyfile"
+  register: caddyfile_stat
+
+- name: Debug Caddyfile existence
+  debug:
+    var: caddyfile_stat.stat.exists
+
+- name: Remove previous Caddy container if it exists
+  containers.podman.podman_container:
+    name: caddy
+    state: absent
+
+- name: Run Caddy in Podman as regular user
+  become: false
   containers.podman.podman_container:
     name: caddy
     image: docker.io/library/caddy:2
     state: started
     detach: true
-    restart_policy: unless-stopped
+    restart_policy: always
     ports:
       - "8080:80"
     volume:
       - "{{ caddy_config_dir }}/Caddyfile:/etc/caddy/Caddyfile:ro,Z"
+
+- name: Verify Caddy container exists
+  command: podman ps -a --filter name=caddy
+  register: caddy_container_check
+
+- name: Show container status
+  debug:
+    var: caddy_container_check.stdout_lines
+
+# ✅ SYSTEMD INTEGRATION
+
+- name: Ensure systemd user unit directory exists
+  become: false
+  file:
+    path: "/home/{{ ansible_user }}/.config/systemd/user"
+    state: directory
+    mode: '0755'
+
+- name: Enable lingering for {{ ansible_user }}
+  become: true
+  command: loginctl enable-linger {{ ansible_user }}
+
+- name: Get UID of remote user
+  become: false
+  command: id -u
+  register: user_uid
+
+- name: Set fact for user UID
+  set_fact:
+    xdg_runtime_dir: "/run/user/{{ user_uid.stdout }}"
+
+- name: Generate systemd unit file for Caddy container
+  become: false
+  shell: |
+    export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    podman generate systemd --name --files --restart-policy=always caddy
+  args:
+    chdir: "/home/{{ ansible_user }}/.config/systemd/user"
+
+- name: Reload user systemd daemon
+  become: false
+  shell: |
+    systemctl --user daemon-reexec
+    systemctl --user daemon-reload
+  environment:
+    XDG_RUNTIME_DIR: "{{ xdg_runtime_dir }}"
+
+- name: Enable and start systemd unit for Caddy
+  become: false
+  systemd:
+    name: container-caddy.service
+    scope: user
+    enabled: yes
+    state: started
+  environment:
+    XDG_RUNTIME_DIR: "{{ xdg_runtime_dir }}"

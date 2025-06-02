@@ -2,6 +2,7 @@
 - name: Install and run Caddy in Podman
   hosts: all
   become: yes
+  gather_facts: yes
 
   roles:
     - caddy
