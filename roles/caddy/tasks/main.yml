@@ -1,13 +1,33 @@
 - name: Ensure Caddy config directory exists
+  become: true
   file:
     path: "{{ caddy_config_dir }}"
     state: directory
     owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
     mode: '0755'
 
-- name: Copy Caddyfile to config directory
-  copy:
-    src: Caddyfile
+- name: Ensure Caddy data directory exists
+  become: true
+  file:
+    path: "{{ caddy_data_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Ensure Caddy config subdirectory directory exists
+  become: true
+  file:
+    path: "{{ caddy_config_dir }}/config"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Template Caddyfile with Vault-based domains
+  template:
+    src: Caddyfile.j2
     dest: "{{ caddy_config_dir }}/Caddyfile"
     owner: "{{ ansible_user }}"
     mode: '0644'
@@ -32,8 +52,8 @@
     name: caddy
     state: absent
 
-- name: Run Caddy in Podman as regular user
-  become: false
+- name: Run Caddy in Podman as root to support Let's Encrypt
+  become: true
   containers.podman.podman_container:
     name: caddy
     image: docker.io/library/caddy:2
@@ -41,9 +61,12 @@
     detach: true
     restart_policy: always
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volume:
       - "{{ caddy_config_dir }}/Caddyfile:/etc/caddy/Caddyfile:ro,Z"
+      - "{{ caddy_data_dir }}:/data:Z"
+      - "{{ caddy_config_dir }}/config:/config:Z"
 
 - name: Verify Caddy container exists
   command: podman ps -a --filter name=caddy
@@ -52,51 +75,3 @@
 - name: Show container status
   debug:
     var: caddy_container_check.stdout_lines
-
-# ✅ SYSTEMD INTEGRATION
-
-- name: Ensure systemd user unit directory exists
-  become: false
-  file:
-    path: "/home/{{ ansible_user }}/.config/systemd/user"
-    state: directory
-    mode: '0755'
-
-- name: Enable lingering for {{ ansible_user }}
-  become: true
-  command: loginctl enable-linger {{ ansible_user }}
-
-- name: Get UID of remote user
-  become: false
-  command: id -u
-  register: user_uid
-
-- name: Set fact for user UID
-  set_fact:
-    xdg_runtime_dir: "/run/user/{{ user_uid.stdout }}"
-
-- name: Generate systemd unit file for Caddy container
-  become: false
-  shell: |
-    export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-    podman generate systemd --name --files --restart-policy=always caddy
-  args:
-    chdir: "/home/{{ ansible_user }}/.config/systemd/user"
-
-- name: Reload user systemd daemon
-  become: false
-  shell: |
-    systemctl --user daemon-reexec
-    systemctl --user daemon-reload
-  environment:
-    XDG_RUNTIME_DIR: "{{ xdg_runtime_dir }}"
-
-- name: Enable and start systemd unit for Caddy
-  become: false
-  systemd:
-    name: container-caddy.service
-    scope: user
-    enabled: yes
-    state: started
-  environment:
-    XDG_RUNTIME_DIR: "{{ xdg_runtime_dir }}"

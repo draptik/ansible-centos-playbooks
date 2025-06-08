@@ -1,5 +1,5 @@
 readeck_port: 8080
 
-caddy_config_dir: "{{ user_home }}/caddy/config"
-caddy_data_dir: "{{ user_home }}/caddy/data"
+caddy_config_dir: /etc/caddy
+caddy_data_dir: /var/lib/caddy
 

@@ -1,4 +1,0 @@
-:80 {
-  respond "Caddy is working!"
-}
-

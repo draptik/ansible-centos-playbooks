@@ -1,0 +1,18 @@
+{{ caddy_main_domain }},
+nextcloud.{{ caddy_main_domain }} {
+  reverse_proxy https://{{ old_nextcloud_server }} {
+    header_up Host {{ caddy_main_domain }}
+    header_up X-Forwarded-Proto https
+    header_up X-Real-IP {remote_host}
+    transport http {
+      tls
+      tls_server_name {{ caddy_main_domain }}
+      tls_insecure_skip_verify
+    }
+  }
+}
+
+demo.{{ caddy_main_domain }} {
+  respond "It works with HTTPS!"
+}
+
