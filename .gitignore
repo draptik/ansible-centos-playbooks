@@ -22,3 +22,5 @@ logs/
 env/
 
 .ansible_cache
+
+vault_pass.txt*
