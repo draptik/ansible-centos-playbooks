@@ -1,3 +1,11 @@
+- name: Ensure Readeck config directory exists
+  ansible.builtin.file:
+    path: "{{ readeck_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Ensure Readeck data directory exists
   ansible.builtin.file:
     path: "{{ readeck_data_dir }}"
@@ -5,6 +13,14 @@
     owner: root
     group: root
     mode: "0755"
+
+- name: Deploy Readeck config from template
+  ansible.builtin.template:
+    src: config.toml.j2
+    dest: "{{ readeck_config_dir }}/config.toml"
+    owner: root
+    group: root
+    mode: "0600"
 
 - name: Deploy Readeck container
   containers.podman.podman_container:
@@ -16,6 +32,9 @@
       - "8081:8000/tcp"
     volume:
       - "{{ readeck_data_dir }}:/data:z"
+      - "{{ readeck_config_dir }}:/app:z"
+    working_dir: /app
     env:
       READECK_ALLOWED_HOSTS: "{{ readeck_allowed_hosts }}"
       READECK_USE_X_FORWARDED: "true"
+      READECK_DATA_DIRECTORY: "/data"
