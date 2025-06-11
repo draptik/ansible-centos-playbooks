@@ -12,10 +12,14 @@ nextcloud.{{ caddy_main_domain }} {
   }
 }
 
-demo.{{ caddy_main_domain }} {
-  respond "It works with HTTPS!"
+readeck.{{ caddy_main_domain }} {
+  reverse_proxy {{ inventory_hostname }}:8081 {
+    header_up Host readeck.{{ caddy_main_domain }}
+    header_up X-Forwarded-Proto https
+    header_up X-Real-IP {remote_host}
+  }
 }
 
-:8080 {
-  reverse_proxy localhost:8080
+demo.{{ caddy_main_domain }} {
+  respond "It works!"
 }

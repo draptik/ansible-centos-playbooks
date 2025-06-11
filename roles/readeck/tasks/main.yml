@@ -12,7 +12,10 @@
     image: "{{ readeck_image }}"
     state: started
     restart_policy: always
+    ports:
+      - "8081:8000/tcp"
     volume:
       - "{{ readeck_data_dir }}:/data:z"
-    publish:
-      - "8081:8000"
+    env:
+      READECK_ALLOWED_HOSTS: "{{ readeck_allowed_hosts }}"
+      READECK_USE_X_FORWARDED: "true"
