@@ -1,0 +1,18 @@
+- name: Ensure Readeck data directory exists
+  ansible.builtin.file:
+    path: "{{ readeck_data_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Readeck container
+  containers.podman.podman_container:
+    name: "{{ readeck_container_name }}"
+    image: "{{ readeck_image }}"
+    state: started
+    restart_policy: always
+    volume:
+      - "{{ readeck_data_dir }}:/data:z"
+    publish:
+      - "8081:8000"

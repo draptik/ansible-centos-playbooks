@@ -3,3 +3,4 @@
 - import_playbook: playbooks/install-podman.yml
 - import_playbook: playbooks/install-cockpit.yml
 - import_playbook: playbooks/install-caddy.yml
+- import_playbook: playbooks/install-readeck.yml

@@ -1,0 +1,6 @@
+- name: Deploy Readeck on Podman host
+  hosts: moth
+  become: true
+
+  roles:
+    - readeck

@@ -16,3 +16,6 @@ demo.{{ caddy_main_domain }} {
   respond "It works with HTTPS!"
 }
 
+:8080 {
+  reverse_proxy localhost:8080
+}
