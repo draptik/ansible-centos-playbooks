@@ -1,4 +1,4 @@
-readeck_version: "latest"
+readeck_version: "0.19.2"
 readeck_image: "codeberg.org/readeck/readeck:{{ readeck_version }}"
 readeck_data_dir: "/var/lib/readeck/data"
 readeck_config_dir: "/var/lib/readeck/config"
