@@ -1,5 +1,30 @@
+(header_security) {
+  header {
+    # Enable HTTP Strict Transport Security (HSTS)
+    # Change max-age from 86400 (1 day) to 31536000 (1 year) when everything works
+    Strict-Transport-Security "max-age=86400; includeSubDomains; preload"
+
+    # Disallow sniffing of X-Content-Type-Options
+    X-Content-Type-Options "nosniff"
+
+    X-Frame-Options "DENY"
+
+    Permissions-Policy "geolocation=()"
+
+    # Basic CSP
+    Content-Security-Policy "default-src 'self'; script-src 'self'; object-src 'none'"
+
+    Referrer-Policy "no-referrer"
+
+    # Remove identifying headers
+    -Server
+    -X-Powered-By
+  }
+}
+
 {{ caddy_main_domain }},
 nextcloud.{{ caddy_main_domain }} {
+  import header_security
   reverse_proxy https://{{ old_nextcloud_server }} {
     header_up Host {{ caddy_main_domain }}
     header_up X-Forwarded-Proto https
@@ -13,6 +38,7 @@ nextcloud.{{ caddy_main_domain }} {
 }
 
 readeck.{{ caddy_main_domain }} {
+  import header_security
   reverse_proxy {{ inventory_hostname }}:8081 {
     header_up Host readeck.{{ caddy_main_domain }}
     header_up X-Forwarded-Proto https
@@ -21,5 +47,6 @@ readeck.{{ caddy_main_domain }} {
 }
 
 demo.{{ caddy_main_domain }} {
+  import header_security
   respond "It works!"
 }
