@@ -38,7 +38,17 @@ nextcloud.{{ caddy_main_domain }} {
 }
 
 readeck.{{ caddy_main_domain }} {
-  import header_security
+  # import header_security
+  header {
+    # Disallow sniffing of X-Content-Type-Options
+    #X-Content-Type-Options "nosniff"
+
+    #X-Frame-Options "DENY"
+
+    # Remove identifying headers
+    #-Server
+    #-X-Powered-By
+  }
   reverse_proxy {{ inventory_hostname }}:8081 {
     header_up Host readeck.{{ caddy_main_domain }}
     header_up X-Forwarded-Proto https
