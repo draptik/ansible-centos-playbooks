@@ -3,3 +3,15 @@ caddy_data_dir: /var/lib/caddy
 
 readeck_main_user: "{{ vault_readeck_main_user }}"
 readeck_main_password: "{{ vault_readeck_main_password }}"
+
+# restic backup
+restic_readeck_ssh_key_basename: "readeck-backup"
+restic_ssh_public_key_already_copied_to_nas: "ssh_public_key_already_copied_to_nas"
+restic_backup_user: "{{ vault_restic_backup_user }}"
+restic_nas_name: "{{ vault_nas_name }}"
+restic_nas_user: "{{ vault_restic_nas_user }}"
+restic_readeck_destination_repository: "sftp:{{ vault_restic_nas_user }}@{{ vault_nas_name }}:{{ vault_restic_readeck_nas_repo_name }}"
+restic_readeck_password: "{{ vault_restic_readeck_password }}"
+restic_readeck_sftp_host_key: "{{ vault_restic_readeck_sftp_host_key }}"
+restic_readeck_backup_source_path: "/var/lib/readeck"
+restic_readeck_backup_cron_time: "0 2 * * *" # daily, at 2 am

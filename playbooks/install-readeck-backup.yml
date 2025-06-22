@@ -1,0 +1,6 @@
+- name: Deploy Readeck Backup on Podman host
+  hosts: moth
+  become: true
+
+  roles:
+    - readeck_backup

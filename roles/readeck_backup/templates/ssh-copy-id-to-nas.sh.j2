@@ -1,0 +1,14 @@
+#!/bin/bash
+# -*- mode:sh -*-
+
+## Copy ssh public key to NAS.
+## Then create a lock file which can be used by ansible to detect if the public key has already been copied.
+
+set -o nounset
+set -o errexit
+
+readonly SSH_PUBLIC_KEY="/home/{{ restic_backup_user }}/.ssh/{{ restic_readeck_ssh_key_basename }}.pub"
+readonly NAS="{{ restic_nas_user }}@{{ restic_nas_name }}"
+readonly LOCK_FILE="/home/{{ restic_backup_user }}/{{ restic_ssh_public_key_already_copied_to_nas }}.lock"
+
+ssh-copy-id -i "$SSH_PUBLIC_KEY" "$NAS" && touch "$LOCK_FILE"

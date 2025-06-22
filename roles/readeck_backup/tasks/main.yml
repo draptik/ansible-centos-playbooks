@@ -1,0 +1,125 @@
+- name: Ensure /usr/local/bin exists
+  become: true
+  file:
+    path: /usr/local/bin
+    state: directory
+    mode: "0755"
+
+- name: Download Restic static binary
+  become: true
+  get_url:
+    url: "https://github.com/restic/restic/releases/download/v0.16.4/restic_0.16.4_linux_amd64.bz2"
+    dest: /usr/local/bin/restic.bz2
+    mode: "0755"
+    force: true
+
+- name: Decompress Restic binary
+  become: true
+  command: bzip2 -df /usr/local/bin/restic.bz2
+  args:
+    creates: /usr/local/bin/restic
+
+- name: Ensure Restic is executable
+  become: true
+  file:
+    path: /usr/local/bin/restic
+    mode: "0755"
+    state: file
+
+- name: Debug restic_backup_user and related vars
+  debug:
+    msg:
+      - "restic_backup_user = {{ restic_backup_user }}"
+      - "vault_nas_name = {{ vault_nas_name }}"
+      - "restic_readeck_sftp_host_key = {{ restic_readeck_sftp_host_key }}"
+      - "restic_readeck_destination_repository = {{ restic_readeck_destination_repository }}"
+
+
+# NOTE: Automatically setting up ssh keys and copying the public key to the
+# backup server without user interaction isn't trivial. I'll do this manually instead.
+#
+# - name: Ensure .ssh directory exists for backup user
+#   become: true
+#   file:
+#     path: "/home/{{ restic_backup_user }}/.ssh"
+#     state: directory
+#     mode: "0700"
+#     owner: "{{ restic_backup_user }}"
+#     group: "{{ restic_backup_user }}"
+#
+# - name: Check if SSH key already exists
+#   stat:
+#     path: "/home/{{ restic_backup_user }}/.ssh/id_ed25519"
+#   register: ssh_key_check
+#
+# - name: Generate SSH key for backup user if missing
+#   become: true
+#   become_user: "{{ restic_backup_user }}"
+#   community.crypto.openssh_keypair:
+#     path: "/home/{{ restic_backup_user }}/.ssh/{{ restic_readeck_ssh_key_basename }}"
+#     type: ed25519
+#     mode: '0600'
+#     comment: "{{ restic_backup_user }}@{{ ansible_hostname }} for restic backups of readeck"
+#   when: not ssh_key_check.stat.exists
+#
+# - name: Copy ssh script
+#   become: true
+#   become_user: "{{ restic_backup_user }}"
+#   ansible.builtin.template:
+#     src: ssh-copy-id-to-nas.sh.j2
+#     dest: "/home/{{ restic_backup_user }}/ssh-copy-id-to-nas.sh"
+#     mode: '0744'
+#
+# - name: Ensure known host entry exists
+#   become: true
+#   become_user: "{{ restic_backup_user }}"
+#   known_hosts:
+#     name: "{{ vault_nas_name }}"
+#     key: "{{ restic_readeck_sftp_host_key }}"
+#     path: "/home/{{ restic_backup_user }}/.ssh/known_hosts"
+#   when: restic_readeck_sftp_host_key is defined
+#
+# - name: Check if SSH public key has already been copied to NAS
+#   stat:
+#     path: "/home/{{ restic_backup_user }}/.ssh/{{ restic_ssh_public_key_already_copied_to_nas }}.lock"
+#   register: ssh_copy_lock
+#
+# - name: Copy SSH key to NAS and create lock file (only if no lock file exists)
+#   become: true
+#   become_user: "{{ restic_backup_user }}"
+#   shell: "/home/{{ restic_backup_user }}/ssh-copy-id-to-nas.sh"
+#   when: not ssh_copy_lock.stat.exists
+
+- name: Ensure Restic log file exists
+  become: true
+  file:
+    path: /var/log/restic-readeck.log
+    state: touch
+    mode: "0644"
+    owner: "{{ restic_backup_user }}"
+    group: "{{ restic_backup_user }}"
+
+- name: Configure logrotate for Restic Readeck
+  become: true
+  copy:
+    dest: /etc/logrotate.d/restic-readeck
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      /var/log/restic-readeck.log {
+          weekly
+          rotate 8
+          compress
+          missingok
+          notifempty
+          create 0644 {{ restic_backup_user }} {{ restic_backup_user }}
+      }
+
+- name: Create backup script from template
+  become: true
+  template:
+    src: backup.sh.j2
+    dest: /usr/local/bin/restic-backup.sh
+    mode: "0755"
+
