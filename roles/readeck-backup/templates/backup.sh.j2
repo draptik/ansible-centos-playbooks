@@ -16,6 +16,19 @@ log() {
   echo "[$(date --iso-8601=seconds)] $*"
 }
 
+cleanup() {
+  log "Restarting container {{ readeck_container_name }}"
+  podman start "{{ readeck_container_name }}"
+}
+
+# `trap` ensures that the `cleanup` script is executed, no matter what the outcome
+# of this script is. This way we ensure that the container is started even if the
+# backup fails.
+trap cleanup EXIT
+
+log "Stopping container {{ readeck_container_name }}"
+podman stop "{{ readeck_container_name }}"
+
 log "Starting restic backup"
 log "Source: ${RESTIC_BACKUP_SOURCE}"
 log "Destination: ${RESTIC_REPOSITORY}"
