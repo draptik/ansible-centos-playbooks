@@ -1,1 +1,6 @@
-# TODO
+restic_backup_user: "{{ vault_restic_backup_user }}"
+restic_nas_name: "{{ vault_nas_name }}"
+restic_nas_user: "{{ vault_restic_nas_user }}"
+restic_readeck_destination_repository: "sftp:{{ vault_restic_nas_user }}@{{ vault_nas_name }}:{{ vault_restic_readeck_nas_repo_name }}"
+restic_readeck_password: "{{ vault_restic_readeck_password }}"
+restic_readeck_backup_source_path: "{{ readeck_data_base_dir }}"

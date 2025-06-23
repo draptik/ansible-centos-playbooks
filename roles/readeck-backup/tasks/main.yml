@@ -1,0 +1,115 @@
+# RESTIC INSTALLATION ---------------------------------------------------------
+# NOTE: Restic is not available yet in CentOS Stream 10 EPEL.
+# We have to manually download it.
+- name: Ensure /usr/local/bin exists
+  become: true
+  become_user: root
+  file:
+    path: /usr/local/bin
+    state: directory
+    mode: "0755"
+
+- name: Download Restic static binary
+  become: true
+  become_user: root
+  get_url:
+    url: "https://github.com/restic/restic/releases/download/v0.18.0/restic_0.18.0_linux_amd64.bz2"
+    dest: /usr/local/bin/restic.bz2
+    mode: "0755"
+    force: true
+
+- name: Decompress Restic binary
+  become: true
+  become_user: root
+  command: bzip2 -df /usr/local/bin/restic.bz2
+  args:
+    creates: /usr/local/bin/restic
+
+- name: Ensure Restic is executable
+  become: true
+  become_user: root
+  file:
+    path: /usr/local/bin/restic
+    mode: "0755"
+    state: file
+
+# RESTIC SCRIPT ---------------------------------------------------------------
+- name: Ensure ~/.restic directory exists
+  file:
+    path: "/home/{{ readeck_os_user }}/.restic"
+    state: directory
+    mode: "0700"
+    owner: "{{ readeck_os_user }}"
+    group: "{{ readeck_os_user }}"
+
+- name: Deploy Restic password file
+  copy:
+    content: "{{ restic_readeck_password }}"
+    dest: "/home/{{ readeck_os_user }}/.restic/readeck-password"
+    owner: "{{ readeck_os_user }}"
+    group: "{{ readeck_os_user }}"
+    mode: "0600"
+
+- name: Ensure /home/{{ readeck_os_user }}/bin exists
+  become: true
+  file:
+    path: /home/{{ readeck_os_user }}/bin
+    state: directory
+    mode: "0755"
+
+- name: Copy backup script
+  template:
+    src: backup.sh.j2
+    dest: /home/{{ readeck_os_user }}/bin/restic-backup-readeck.sh
+    mode: "0755"
+
+# SYSTEMD TIMER SETUP (USER SERVICE) ------------------------------------------
+- name: Ensure .config/systemd/user directory exists
+  ansible.builtin.file:
+    path: "/home/{{ readeck_os_user }}/.config/systemd/user"
+    state: directory
+    mode: '0755'
+
+- name: Deploy restic-backup-readeck.service
+  ansible.builtin.copy:
+    dest: "/home/{{ readeck_os_user }}/.config/systemd/user/restic-backup-readeck.service"
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Restic backup for rootless Podman volume (Readeck)
+      After=network.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/home/{{ readeck_os_user }}/bin/restic-backup-readeck.sh
+
+- name: Deploy restic-backup-readeck.timer
+  ansible.builtin.copy:
+    dest: "/home/{{ readeck_os_user }}/.config/systemd/user/restic-backup-readeck.timer"
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Run daily restic backup (readeck) at 2 AM
+
+      [Timer]
+      OnCalendar=*-*-* 02:00:00
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+
+- name: Reload user systemd manager configuration
+  ansible.builtin.command: systemctl --user daemon-reload
+  changed_when: false
+
+- name: Enable linger for the user (allow timers to run without login)
+  ansible.builtin.command: loginctl enable-linger {{ readeck_os_user }}
+  args:
+    creates: "/var/lib/systemd/linger/{{ readeck_os_user }}"
+
+- name: Enable and start restic-backup-readeck.timer
+  ansible.builtin.systemd:
+    name: restic-backup-readeck.timer
+    enabled: true
+    state: started
+    scope: user

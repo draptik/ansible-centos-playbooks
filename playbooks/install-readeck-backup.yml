@@ -1,9 +1,10 @@
-- name: Deploy Readeck on Podman host
+- name: Deploy Readeck Backup on Podman host
   vars_files:
     - ../inventories/development/group_vars/readeck/0_setup.yml
+    - ../inventories/development/group_vars/readeck/1_backup.yml
   hosts: moth
   become: true
   become_user: "{{ readeck_os_user }}"
 
   roles:
-    - readeck
+    - readeck-backup

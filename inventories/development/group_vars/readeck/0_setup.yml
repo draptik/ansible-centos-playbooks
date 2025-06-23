@@ -4,8 +4,9 @@ readeck_main_password: "{{ vault_readeck_main_password }}"
 readeck_version: "0.19.2"
 readeck_image: "codeberg.org/readeck/readeck:{{ readeck_version }}"
 
-readeck_data_dir: "/srv/readeck/data"
-readeck_config_dir: "/srv/readeck/config"
+readeck_data_base_dir: "/srv/readeck"
+readeck_data_dir: "{{ readeck_data_base_dir }}/data"
+readeck_config_dir: "{{ readeck_data_base_dir }}/config"
 
 readeck_container_name: "readeck"
 
