@@ -1,6 +1,0 @@
-readeck_version: "0.19.2"
-readeck_image: "codeberg.org/readeck/readeck:{{ readeck_version }}"
-readeck_data_dir: "/var/lib/readeck/data"
-readeck_config_dir: "/var/lib/readeck/config"
-readeck_container_name: "readeck"
-readeck_allowed_hosts: "readeck.{{ caddy_main_domain }},localhost"

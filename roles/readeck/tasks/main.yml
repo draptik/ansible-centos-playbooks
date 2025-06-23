@@ -1,25 +1,27 @@
 - name: Ensure Readeck config directory exists
+  become: true
+  become_user: root
   ansible.builtin.file:
     path: "{{ readeck_config_dir }}"
     state: directory
-    owner: root
-    group: root
     mode: "0755"
+    owner: "{{ readeck_os_user }}"
+    group: "{{ readeck_os_user }}"
 
 - name: Ensure Readeck data directory exists
+  become: true
+  become_user: root
   ansible.builtin.file:
     path: "{{ readeck_data_dir }}"
     state: directory
-    owner: root
-    group: root
     mode: "0755"
+    owner: "{{ readeck_os_user }}"
+    group: "{{ readeck_os_user }}"
 
 - name: Deploy Readeck config from template
   ansible.builtin.template:
     src: config.toml.j2
     dest: "{{ readeck_config_dir }}/config.toml"
-    owner: root
-    group: root
     mode: "0600"
 
 - name: Remove previous Readeck container if it exists

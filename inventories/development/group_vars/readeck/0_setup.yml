@@ -1,0 +1,14 @@
+readeck_main_user: "{{ vault_readeck_main_user }}"
+readeck_main_password: "{{ vault_readeck_main_password }}"
+
+readeck_version: "0.19.2"
+readeck_image: "codeberg.org/readeck/readeck:{{ readeck_version }}"
+
+readeck_data_dir: "/srv/readeck/data"
+readeck_config_dir: "/srv/readeck/config"
+
+readeck_container_name: "readeck"
+
+readeck_allowed_hosts: "readeck.{{ caddy_main_domain }},localhost"
+
+readeck_os_user: "patrick"
