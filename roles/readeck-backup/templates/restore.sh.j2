@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# NOTE: This script should not be run automatically!
+
+set -euo pipefail
+
+# Export Restic environment variables
+export RESTIC_PASSWORD_FILE="/home/{{ readeck_os_user }}/.restic/readeck-password"
+export RESTIC_REPOSITORY="{{ restic_readeck_destination_repository }}"
+export RESTIC_HOST="{{ inventory_hostname }}"
+
+# Define path to restic binary explicitly
+RESTIC="/usr/local/bin/restic"
+
+# Function to log messages with timestamps
+log() {
+  echo "[$(date --iso-8601=seconds)] $*"
+}
+
+## Check Restic ----------------------------------
+log "Running restic consistency check"
+"$RESTIC" check --read-data
+
+## Restic restore ----------------------------------
+readonly TMP_RESTORE_FOLDER="/home/{{ readeck_os_user }}/tmp/restore-target"
+log "Preparing restore directory: ${TMP_RESTORE_FOLDER}"
+mkdir -p "${TMP_RESTORE_FOLDER}"
+
+## see https://www.shellcheck.net/wiki/SC2115
+rm -rf "${TMP_RESTORE_FOLDER:?}"/*
+
+log "Restoring latest snapshot into ${TMP_RESTORE_FOLDER}"
+"$RESTIC" restore latest --verify --target "${TMP_RESTORE_FOLDER}"

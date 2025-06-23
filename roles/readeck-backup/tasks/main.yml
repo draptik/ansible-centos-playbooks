@@ -115,3 +115,9 @@
     enabled: true
     state: started
     scope: user
+
+- name: Deploy restore script
+  template:
+    src: restore.sh.j2
+    dest: /home/{{ readeck_os_user }}/bin/restic-restore-readeck.sh
+    mode: "0755"
