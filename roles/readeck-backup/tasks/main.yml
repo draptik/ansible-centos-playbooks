@@ -81,7 +81,9 @@
 
       [Service]
       Type=oneshot
+      TimeoutStartSec=90
       ExecStart=/home/{{ readeck_os_user }}/bin/restic-backup-readeck.sh
+      KillMode=process
 
 - name: Deploy restic-backup-readeck.timer
   ansible.builtin.copy:
