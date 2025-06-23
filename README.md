@@ -5,6 +5,7 @@ This repository automates the setup of a CentOS Stream 10 VM using Ansible. It p
 - CentOS base system setup (repositories, dev tools)
 - General Linux configuration (aliases, CLI utilities)
 - Rootless Podman installation and integration
+- Readeck in container
 
 ---
 
@@ -31,41 +32,54 @@ chmod 0440 /etc/sudoers.d/wheel-nopasswd
 ```text
 ansible-centos-playbooks/
 ├── ansible.cfg                    # Ansible config (inventory path, roles path, etc.)
-├── inventories/
-│   ├── development/
-│   │   └── group_vars/
-│   │       └── all/
-│   │           └── all.yml
-│   │           └── vault.yml
-│   └── hosts.ini                  # Inventory file for development environment
-├── playbooks/
-│   ├── setup-base.yml             # Playbook: Base system setup (common + system)
-│   ├── install-podman.yml         # Playbook: Podman install and config
-│   ├── install-cockpit.yml        # Playbook: Cockpit install and config
-│   └── install-caddy.yml          # Playbook: Caddy install and config
-├── roles/
-│   ├── common/
-│   │   └── tasks/
-│   │       └── main.yml           # CentOS-specific setup (repos, dev tools)
-│   ├── system/
-│   │   └── tasks/
-│   │       └── main.yml           # General config (CLI tools, aliases)
-│   ├── podman/
-│   │   └── tasks/
-│   │       └── main.yml           # Rootless Podman setup
-│   ├── cockpit/
-│   │   └── tasks/
-│   │       └── main.yml           # Podman's cockpit
-│   ├── caddy/
-│   │   ├── tasks/
-│   │   │   └── main.yml           # Reverse Proxy
-│   │   └── files/
-│   │       └── CaddyFile          # Caddy's config file
-│   └── other/
-│       └── tasks/
-│           └── main.yml           # For future roles
-├── site.yml                       # Aggregates both playbooks
-├── run-playbook-tools.sh          # Script to run setup-base.yml
+├── inventories
+│   └── development
+│       ├── group_vars
+│       │   ├── all
+│       │   │   ├── all.yml        # Variables
+│       │   │   └── vault.yml      # Ansible vault
+│       │   └── readeck
+│       │       ├── 0_setup.yml    # Readeck setup variables
+│       │       └── 1_backup.yml   # Readeck backup variables
+│       └── hosts.ini              # Inventory file for development environment
+├── playbooks
+│   ├── install-caddy.yml          # Playbook: Caddy install and config
+│   ├── install-cockpit.yml        # Playbook: Cockpit install and config
+│   ├── install-podman.yml         # Playbook: Podman install and config
+│   ├── install-readeck-backup.yml # Playbook: Readeck backup
+│   ├── install-readeck.yml        # Playbook: Readeck setup
+│   └── setup-base.yml             # Playbook: Base system setup (common + system)
+├── roles
+│   ├── caddy
+│   │   ├── tasks
+│   │   │   └── main.yml           # Reverse Proxy
+│   │   └── templates
+│   │       └── Caddyfile.j2       # Caddy's config file
+│   ├── cockpit
+│   │   └── tasks
+│   │       └── main.yml           # Podman's cockpit
+│   ├── common
+│   │   └── tasks
+│   │       └── main.yml           # CentOS-specific setup (repos, dev tools)
+│   ├── podman
+│   │   └── tasks
+│   │       └── main.yml           # Rootless Podman setup
+│   ├── readeck
+│   │   ├── tasks
+│   │   │   └── main.yml           # Readeck setup
+│   │   └── templates
+│   │       └── config.toml.j2     # Readeck config
+│   ├── readeck-backup
+│   │   ├── tasks
+│   │   │   └── main.yml           # Readeck backup
+│   │   └── templates
+│   │       ├── backup.sh.j2
+│   │       └── restore.sh.j2
+│   └── system
+│       └── tasks
+│           └── main.yml           # General config (CLI tools, aliases)
+├── site.yml                       # Aggregates all playbooks
+├── run-all.sh                     # Script to run all playbooks
 └── README.md                      # This documentation
 ```
 
@@ -101,6 +115,21 @@ ansible-centos-playbooks/
 - Starts and enables `podman.socket` (rootless API socket)
 - Uses systemd user scope and sets `XDG_RUNTIME_DIR` automatically
 
+### Cockpit Setup (`cockpit` role)
+
+- Installs `cockpit` (dashboard for `podman`)
+
+### Caddy Setup (`caddy` role)
+
+- Installs `caddy` (reverse proxy)
+- Since Caddy's builtin support for Let's Encrypt requires port 80 to renew the certificates, we have to run this container as root.
+
+### Readeck Setup (roles `readeck` and `readeck-backup`)
+
+- Readeck is a "read-it-later" service ("Pocket" replacement)
+- Backup via `restic`
+  - Prerequisites: working ssh connection to backup server
+
 ---
 
 ## 🚀 Usage
@@ -111,7 +140,7 @@ Edit `inventories/development/hosts.ini`:
 
 ```ini
 [centos]
-moth ansible_host=192.168.1.100 ansible_user=ansible_user
+moth
 ```
 
 Make sure:
@@ -122,47 +151,28 @@ Make sure:
 
 ---
 
-### 2. Run Base Setup Only
+### 2. Adapt the Ansible Vault
+
+The file `inventories/development/group_vars/all/all.yml` references some variables from the vault. All these variables start with `vault_`.
 
 ```bash
-./run-playbook-tools.sh
+ansible-vault edit inventories/development/group_vars/all/vault.yml
 ```
 
-This runs `playbooks/setup-base.yml`, which applies both the `common` and `system` roles.
+The `ansible-vault` command requires a file `vault_pass.txt`, which is obviously excluded from git.
 
 ---
 
-### 3. Run Podman Setup Only
+### 3. Adapt home network settings
 
-```bash
-ansible-playbook playbooks/install-podman.yml
-```
-
-This runs the `podman` role to configure rootless Podman.
+Not part of this documentation (i.e. Router settings, domain name, etc).
 
 ---
 
 ### 4. Run Full Setup
 
 ```bash
-ansible-playbook site.yml
+./run-all.sh
 ```
 
-This runs all roles: base system setup and Podman.
-
----
-
-## 🔍 Verifying Podman Setup
-
-SSH into the target system as the user (e.g., `ansible_user`), and run:
-
-```bash
-podman info --log-level=error
-systemctl --user status podman.socket
-```
-
-You can also test with:
-
-```bash
-podman run --rm docker.io/library/hello-world
-```
+This runs all roles. In case one wishes to run only certain playbooks: comment the other playbooks in file `site.yml`.
