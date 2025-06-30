@@ -1,7 +1,7 @@
 ---
 # roles/paperless/tasks/1_volumes.yml
 
-- name: Get UID and GID of ansible_user
+- name: Get UID of ansible_user
   ansible.builtin.command: "id -u {{ ansible_user }}"
   register: ansible_user_uid
   changed_when: false
@@ -27,7 +27,7 @@
   become: true
   tags: volumes
 
-- name: Ensure Redis data directory exists (owned by ansible_user)
+- name: Ensure Redis data directory exists
   ansible.builtin.file:
     path: "{{ paperless_base }}/redisdata"
     state: directory
@@ -37,7 +37,7 @@
   become: true
   tags: volumes
 
-- name: Ensure PostgreSQL data directory exists (owned by ansible_user)
+- name: Ensure PostgreSQL data directory exists
   ansible.builtin.file:
     path: "{{ paperless_base }}/pgdata"
     state: directory

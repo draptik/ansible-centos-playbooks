@@ -1,64 +1,64 @@
 ---
 - name: Ensure custom Podman network exists
   containers.podman.podman_network:
-    name: paperless-net
+    name: "{{ paperless_network }}"
     state: present
   become: true
 
 - name: Ensure Redis image is present
   containers.podman.podman_image:
-    name: docker.io/library/redis:8
+    name: "{{ paperless_redis_image }}"
   become: true
 
 - name: Create Redis container (broker)
   containers.podman.podman_container:
     name: paperless-broker
-    image: docker.io/library/redis:8
+    image: "{{ paperless_redis_image }}"
     state: created
     publish:
       - "6380:6379"
     volume:
-      - /srv/paperless/redisdata:/data:Z
+      - "{{ paperless_base }}/redisdata:/data:Z"
     restart_policy: always
-    network: paperless-net
+    network: "{{ paperless_network }}"
   become: true
 
 - name: Ensure PostgreSQL image is present
   containers.podman.podman_image:
-    name: docker.io/library/postgres:17
+    name: "{{ paperless_postgres_image }}"
   become: true
 
 - name: Create PostgreSQL container (db)
   containers.podman.podman_container:
     name: paperless-db
-    image: docker.io/library/postgres:17
+    image: "{{ paperless_postgres_image }}"
     state: created
     volume:
-      - /srv/paperless/pgdata:/var/lib/postgresql/data:Z
+      - "{{ paperless_base }}/pgdata:/var/lib/postgresql/data:Z"
     env:
       POSTGRES_DB: paperless
       POSTGRES_USER: paperless
       POSTGRES_PASSWORD: paperless
     restart_policy: always
-    network: paperless-net
+    network: "{{ paperless_network }}"
   become: true
 
 - name: Ensure Gotenberg image is present
   containers.podman.podman_image:
-    name: docker.io/gotenberg/gotenberg:8.20
+    name: "{{ paperless_gotenberg_image }}"
   become: true
 
 - name: Create Gotenberg container
   containers.podman.podman_container:
     name: paperless-gotenberg
-    image: docker.io/gotenberg/gotenberg:8.20
+    image: "{{ paperless_gotenberg_image }}"
     state: created
     command:
       - "gotenberg"
       - "--chromium-disable-javascript=true"
       - "--chromium-allow-list=file:///tmp/.*"
     restart_policy: always
-    network: paperless-net
+    network: "{{ paperless_network }}"
   become: true
 
 - name: Ensure Tika image is present
@@ -72,5 +72,5 @@
     image: ghcr.io/paperless-ngx/tika:latest
     state: created
     restart_policy: always
-    network: paperless-net
+    network: "{{ paperless_network }}"
   become: true

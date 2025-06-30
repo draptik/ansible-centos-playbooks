@@ -13,7 +13,7 @@
     state: created
     pull: never
     env_file: "{{ paperless_env_path }}"
-    network: paperless-net
+    network: "{{ paperless_network }}"
     user: "{{ ansible_user_uid.stdout }}:{{ ansible_user_gid.stdout }}"
     publish:
       - "8000:8000"
