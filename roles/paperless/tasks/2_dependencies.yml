@@ -1,0 +1,75 @@
+---
+- name: Ensure custom Podman network exists
+  containers.podman.podman_network:
+    name: paperless-net
+    state: present
+  become: true
+
+- name: Ensure Redis image is present
+  containers.podman.podman_image:
+    name: docker.io/library/redis:7
+  become: true
+
+- name: Create Redis container (broker)
+  containers.podman.podman_container:
+    name: paperless-broker
+    image: docker.io/library/redis:7
+    state: created
+    publish:
+      - "6380:6379"
+    volume:
+      - /srv/paperless/redisdata:/data:Z
+    restart_policy: always
+    network: paperless-net
+  become: true
+
+- name: Ensure PostgreSQL image is present
+  containers.podman.podman_image:
+    name: docker.io/library/postgres:13
+  become: true
+
+- name: Create PostgreSQL container (db)
+  containers.podman.podman_container:
+    name: paperless-db
+    image: docker.io/library/postgres:13
+    state: created
+    volume:
+      - /srv/paperless/pgdata:/var/lib/postgresql/data:Z
+    env:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: paperless
+    restart_policy: always
+    network: paperless-net
+  become: true
+
+- name: Ensure Gotenberg image is present
+  containers.podman.podman_image:
+    name: docker.io/gotenberg/gotenberg:7.6
+  become: true
+
+- name: Create Gotenberg container
+  containers.podman.podman_container:
+    name: paperless-gotenberg
+    image: docker.io/gotenberg/gotenberg:7.6
+    state: created
+    command:
+      - "gotenberg"
+      - "--chromium-disable-routes=true"
+    restart_policy: always
+    network: paperless-net
+  become: true
+
+- name: Ensure Tika image is present
+  containers.podman.podman_image:
+    name: ghcr.io/paperless-ngx/tika:latest
+  become: true
+
+- name: Create Tika container
+  containers.podman.podman_container:
+    name: paperless-tika
+    image: ghcr.io/paperless-ngx/tika:latest
+    state: created
+    restart_policy: always
+    network: paperless-net
+  become: true

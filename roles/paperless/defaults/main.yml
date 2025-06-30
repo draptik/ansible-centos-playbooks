@@ -1,0 +1,5 @@
+paperless_image: "ghcr.io/paperless-ngx/paperless-ngx:2.17.1"
+paperless_user: "paperless"
+paperless_base: "/srv/paperless"
+paperless_env_path: "{{ paperless_base }}/.env"
+

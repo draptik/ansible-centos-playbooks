@@ -1,0 +1,9 @@
+- name: paperless
+  hosts: all
+  become: true
+
+  roles:
+    - role: podman
+    - role: cockpit
+    - role: paperless
+

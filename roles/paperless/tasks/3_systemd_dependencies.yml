@@ -1,0 +1,73 @@
+---
+- name: Generate systemd unit for Paperless Redis container
+  command: podman generate systemd --name paperless-broker --files --restart-policy=always
+  args:
+    chdir: /root
+  become: true
+
+- name: Install Redis systemd unit
+  copy:
+    src: /root/container-paperless-broker.service
+    dest: /etc/systemd/system/container-paperless-broker.service
+    remote_src: true
+    mode: "0644"
+  become: true
+
+- name: Generate systemd unit for PostgreSQL container
+  command: podman generate systemd --name paperless-db --files --restart-policy=always
+  args:
+    chdir: /root
+  become: true
+
+- name: Install PostgreSQL systemd unit
+  copy:
+    src: /root/container-paperless-db.service
+    dest: /etc/systemd/system/container-paperless-db.service
+    remote_src: true
+    mode: "0644"
+  become: true
+
+- name: Generate systemd unit for Gotenberg container
+  command: podman generate systemd --name paperless-gotenberg --files --restart-policy=always
+  args:
+    chdir: /root
+  become: true
+
+- name: Install Gotenberg systemd unit
+  copy:
+    src: /root/container-paperless-gotenberg.service
+    dest: /etc/systemd/system/container-paperless-gotenberg.service
+    remote_src: true
+    mode: "0644"
+  become: true
+
+- name: Generate systemd unit for Tika container
+  command: podman generate systemd --name paperless-tika --files --restart-policy=always
+  args:
+    chdir: /root
+  become: true
+
+- name: Install Tika systemd unit
+  copy:
+    src: /root/container-paperless-tika.service
+    dest: /etc/systemd/system/container-paperless-tika.service
+    remote_src: true
+    mode: "0644"
+  become: true
+
+- name: Reload systemd daemon after installing units
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: Enable and start dependency services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - container-paperless-broker.service
+    - container-paperless-db.service
+    - container-paperless-gotenberg.service
+    - container-paperless-tika.service
+  become: true

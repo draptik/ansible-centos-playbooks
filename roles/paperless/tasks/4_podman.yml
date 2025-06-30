@@ -1,0 +1,26 @@
+---
+- name: Ensure Paperless Podman image is present
+  containers.podman.podman_image:
+    name: "{{ paperless_image }}"
+    state: present
+  become: true
+  tags: podman
+
+- name: Create Paperless container (for systemd integration)
+  containers.podman.podman_container:
+    name: paperless
+    image: "{{ paperless_image }}"
+    state: created
+    pull: never
+    env_file: "{{ paperless_env_path }}"
+    network: paperless-net
+    user: "{{ ansible_user_uid.stdout }}:{{ ansible_user_gid.stdout }}"
+    publish:
+      - "8000:8000"
+    volume:
+      - "{{ paperless_base }}/data:/usr/src/paperless/data:Z"
+      - "{{ paperless_base }}/media:/usr/src/paperless/media:Z"
+      - "{{ paperless_base }}/export:/usr/src/paperless/export:Z"
+      - "{{ paperless_base }}/consume:/usr/src/paperless/consume:Z"
+  become: true
+  tags: podman

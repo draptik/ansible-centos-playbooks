@@ -1,0 +1,8 @@
+- name: Tear down Paperless stack
+  hosts: all
+  become: true
+  roles:
+    - role: paperless-teardown
+      vars:
+        remove_images: false
+        remove_volumes: true

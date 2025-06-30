@@ -1,0 +1,70 @@
+---
+# roles/paperless/tasks/1_volumes.yml
+
+- name: Get UID and GID of ansible_user
+  ansible.builtin.command: "id -u {{ ansible_user }}"
+  register: ansible_user_uid
+  changed_when: false
+
+- name: Get GID of ansible_user
+  ansible.builtin.command: "id -g {{ ansible_user }}"
+  register: ansible_user_gid
+  changed_when: false
+
+- name: Ensure Paperless volume directories exist and are owned by ansible_user UID/GID
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user_uid.stdout }}"
+    group: "{{ ansible_user_gid.stdout }}"
+    mode: '0755'
+  loop:
+    - "{{ paperless_base }}"
+    - "{{ paperless_base }}/data"
+    - "{{ paperless_base }}/media"
+    - "{{ paperless_base }}/export"
+    - "{{ paperless_base }}/consume"
+  become: true
+  tags: volumes
+
+- name: Ensure Redis data directory exists (owned by ansible_user)
+  ansible.builtin.file:
+    path: "{{ paperless_base }}/redisdata"
+    state: directory
+    owner: "999"
+    group: "999"
+    mode: '0755'
+  become: true
+  tags: volumes
+
+- name: Ensure PostgreSQL data directory exists (owned by ansible_user)
+  ansible.builtin.file:
+    path: "{{ paperless_base }}/pgdata"
+    state: directory
+    owner: "999"
+    group: "999"
+    mode: '0700'
+  become: true
+  tags: volumes
+
+- name: Relabel Paperless volume directories for container access (SELinux context)
+  ansible.builtin.command: "chcon -Rt container_file_t {{ item }}"
+  loop:
+    - "{{ paperless_base }}/data"
+    - "{{ paperless_base }}/media"
+    - "{{ paperless_base }}/export"
+    - "{{ paperless_base }}/consume"
+    - "{{ paperless_base }}/redisdata"
+    - "{{ paperless_base }}/pgdata"
+  become: true
+  tags: volumes
+
+- name: Deploy Paperless environment file
+  ansible.builtin.template:
+    src: container.env.j2
+    dest: "{{ paperless_env_path }}"
+    owner: "{{ ansible_user_uid.stdout }}"
+    group: "{{ ansible_user_gid.stdout }}"
+    mode: "0644"
+  tags: volumes
+

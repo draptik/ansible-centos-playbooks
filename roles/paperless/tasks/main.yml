@@ -1,0 +1,19 @@
+---
+# - name: Paperless ‒ create user & dirs
+#   import_tasks: 0_user.yml
+
+- name: 1. Paperless ‒ create volume dirs
+  import_tasks: 1_volumes.yml
+
+- name: 2. Paperless ‒ create dependencies (Redis, DB, Gotenberg, Tika)
+  import_tasks: 2_dependencies.yml
+
+- name: 3. Install and start systemd units for dependency containers
+  import_tasks: 3_systemd_dependencies.yml
+
+- name: 4. Paperless ‒ pull image & run container
+  import_tasks: 4_podman.yml
+
+- name: 5. Paperless ‒ generate & enable systemd service
+  import_tasks: 5_systemd.yml
+

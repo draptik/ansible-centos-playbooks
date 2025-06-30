@@ -1,0 +1,71 @@
+---
+- name: Check for existence of Paperless-related systemd unit files
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/{{ item }}"
+  loop:
+    - container-paperless.service
+    - container-paperless-broker.service
+    - container-paperless-db.service
+    - container-paperless-gotenberg.service
+    - container-paperless-tika.service
+  register: paperless_units
+  become: true
+
+- name: Stop and disable existing Paperless-related services
+  ansible.builtin.systemd:
+    name: "{{ item.item }}"
+    state: stopped
+    enabled: false
+  loop: "{{ paperless_units.results }}"
+  when: item.stat.exists
+  become: true
+
+- name: Remove systemd unit files for all Paperless containers
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ item }}"
+    state: absent
+  loop:
+    - container-paperless.service
+    - container-paperless-broker.service
+    - container-paperless-db.service
+    - container-paperless-gotenberg.service
+    - container-paperless-tika.service
+  become: true
+
+- name: Reload systemd after removing units
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: Remove all Paperless containers
+  containers.podman.podman_container:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - paperless
+    - paperless-broker
+    - paperless-db
+    - paperless-gotenberg
+    - paperless-tika
+  become: true
+
+- name: Remove all related images (optional)
+  containers.podman.podman_image:
+    name: "{{ item }}"
+    state: absent
+    force: true
+  loop:
+    - ghcr.io/paperless-ngx/paperless-ngx
+    - docker.io/library/redis:7
+    - docker.io/library/postgres:13
+    - docker.io/gotenberg/gotenberg:7.6
+    - ghcr.io/paperless-ngx/tika
+  become: true
+  when: remove_images | default(false)
+
+- name: (Optional) Remove /srv/paperless volume tree
+  ansible.builtin.file:
+    path: /srv/paperless
+    state: absent
+  become: true
+  when: remove_volumes | default(false)
