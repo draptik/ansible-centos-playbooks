@@ -7,13 +7,13 @@
 
 - name: Ensure Redis image is present
   containers.podman.podman_image:
-    name: docker.io/library/redis:7
+    name: docker.io/library/redis:8
   become: true
 
 - name: Create Redis container (broker)
   containers.podman.podman_container:
     name: paperless-broker
-    image: docker.io/library/redis:7
+    image: docker.io/library/redis:8
     state: created
     publish:
       - "6380:6379"
@@ -25,13 +25,13 @@
 
 - name: Ensure PostgreSQL image is present
   containers.podman.podman_image:
-    name: docker.io/library/postgres:13
+    name: docker.io/library/postgres:17
   become: true
 
 - name: Create PostgreSQL container (db)
   containers.podman.podman_container:
     name: paperless-db
-    image: docker.io/library/postgres:13
+    image: docker.io/library/postgres:17
     state: created
     volume:
       - /srv/paperless/pgdata:/var/lib/postgresql/data:Z
@@ -45,17 +45,18 @@
 
 - name: Ensure Gotenberg image is present
   containers.podman.podman_image:
-    name: docker.io/gotenberg/gotenberg:7.6
+    name: docker.io/gotenberg/gotenberg:8.20
   become: true
 
 - name: Create Gotenberg container
   containers.podman.podman_container:
     name: paperless-gotenberg
-    image: docker.io/gotenberg/gotenberg:7.6
+    image: docker.io/gotenberg/gotenberg:8.20
     state: created
     command:
       - "gotenberg"
-      - "--chromium-disable-routes=true"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-allow-list=file:///tmp/.*"
     restart_policy: always
     network: paperless-net
   become: true
