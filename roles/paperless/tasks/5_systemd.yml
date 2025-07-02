@@ -1,7 +1,7 @@
 ---
-- name: Generate systemd unit file for Paperless container
+- name: Generate systemd unit file for Paperless webserver container
   ansible.builtin.command:
-    cmd: podman generate systemd --name paperless --files --restart-policy=always
+    cmd: podman generate systemd --name paperless-webserver --files --restart-policy=always
     chdir: /root  # Or any temporary writeable dir
   become: true
   register: systemd_unit_result
@@ -10,8 +10,8 @@
 
 - name: Copy generated unit to systemd system directory
   ansible.builtin.copy:
-    src: "/root/container-paperless.service"
-    dest: "/etc/systemd/system/container-paperless.service"
+    src: "/root/container-paperless-webserver.service"
+    dest: "/etc/systemd/system/container-paperless-webserver.service"
     remote_src: true
     owner: root
     group: root
@@ -21,7 +21,7 @@
 
 - name: Reload systemd and enable/start Paperless container
   ansible.builtin.systemd:
-    name: container-paperless.service
+    name: container-paperless-webserver.service
     scope: system
     enabled: true
     daemon_reload: true

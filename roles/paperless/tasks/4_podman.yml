@@ -8,7 +8,7 @@
 
 - name: Create Paperless container (for systemd integration)
   containers.podman.podman_container:
-    name: paperless
+    name: paperless-webserver
     image: "{{ paperless_image }}"
     state: created
     pull: never
