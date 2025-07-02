@@ -1,0 +1,44 @@
+#!/bin/bash
+set -euo pipefail
+
+# Paths
+ORIG_DIR="{{ paperless_base }}"
+RESTORED_DIR="{{ paperless_base }}_restored"
+BACKUP_DIR="{{ paperless_base }}_backup_$(date +%Y%m%d_%H%M%S)"
+OWNERSHIP_FILE="$(mktemp /tmp/paperless_ownerships.XXXXXX)"
+
+# Stop all services
+echo "Stopping Paperless services..."
+sudo systemctl stop container-paperless-server.service
+sudo systemctl stop container-paperless-redis.service
+sudo systemctl stop container-paperless-postgres.service
+
+# Save ownerships
+echo "Saving ownerships from ${ORIG_DIR}..."
+sudo find "${ORIG_DIR}" -printf '%P\t%u\t%g\n' | sudo tee "${OWNERSHIP_FILE}" >/dev/null
+
+# Backup current setup
+echo "Backing up current paperless directory to ${BACKUP_DIR}..."
+sudo mv -- "${ORIG_DIR}" "${BACKUP_DIR}"
+
+# Move restored data into place
+echo "Replacing with restored paperless data..."
+sudo mv -- "${RESTORED_DIR}" "${ORIG_DIR}"
+
+# Restore ownerships
+echo "Restoring original ownerships..."
+while IFS=$'\t' read -r relpath user group; do
+  target="${ORIG_DIR}/${relpath}"
+  if [ -e "${target}" ]; then
+    sudo chown "${user}:${group}" "${target}"
+  fi
+done <"${OWNERSHIP_FILE}"
+
+# Cleanup
+rm -f -- "${OWNERSHIP_FILE}"
+
+# Restart services
+echo "Restarting Paperless services..."
+sudo systemctl start container-paperless-postgres.service
+sudo systemctl start container-paperless-redis.service
+sudo systemctl start container-paperless-server.service

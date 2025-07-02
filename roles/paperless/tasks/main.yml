@@ -17,3 +17,5 @@
 - name: 5. Paperless ‒ generate & enable systemd service
   import_tasks: 5_systemd.yml
 
+- name: 99. Paperless - deploy import script once
+  import_tasks: 99_restore_once.yml
