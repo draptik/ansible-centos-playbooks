@@ -1,10 +1,12 @@
 ---
+# Network ---------------------------------------------------------------------
 - name: Ensure custom Podman network exists
   containers.podman.podman_network:
     name: "{{ paperless_network }}"
     state: present
   become: true
 
+# Redis -----------------------------------------------------------------------
 - name: Ensure Redis image is present
   containers.podman.podman_image:
     name: "{{ paperless_redis_image }}"
@@ -23,6 +25,7 @@
     network: "{{ paperless_network }}"
   become: true
 
+# PostgreSQL -------------------------------------------------------------------
 - name: Ensure PostgreSQL image is present
   containers.podman.podman_image:
     name: "{{ paperless_postgres_image }}"
@@ -43,6 +46,7 @@
     network: "{{ paperless_network }}"
   become: true
 
+# Gotenberg --------------------------------------------------------------------
 - name: Ensure Gotenberg image is present
   containers.podman.podman_image:
     name: "{{ paperless_gotenberg_image }}"
@@ -61,6 +65,7 @@
     network: "{{ paperless_network }}"
   become: true
 
+# Tika ------------------------------------------------------------------------
 - name: Ensure Tika image is present
   containers.podman.podman_image:
     name: ghcr.io/paperless-ngx/tika:latest

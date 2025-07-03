@@ -3,7 +3,6 @@
   ansible.builtin.stat:
     path: "/etc/systemd/system/{{ item }}"
   loop:
-    - container-paperless.service
     - container-paperless-webserver.service
     - container-paperless-broker.service
     - container-paperless-db.service
@@ -26,7 +25,6 @@
     path: "/etc/systemd/system/{{ item }}"
     state: absent
   loop:
-    - container-paperless.service
     - container-paperless-webserver.service
     - container-paperless-broker.service
     - container-paperless-db.service
@@ -44,7 +42,7 @@
     name: "{{ item }}"
     state: absent
   loop:
-    - paperless
+    - paperless-webserver
     - paperless-broker
     - paperless-db
     - paperless-gotenberg
