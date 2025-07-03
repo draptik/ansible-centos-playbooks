@@ -5,5 +5,6 @@
 # - import_playbook: playbooks/install-caddy.yml
 # - import_playbook: playbooks/install-readeck.yml
 # - import_playbook: playbooks/install-readeck-backup.yml
-- import_playbook: playbooks/paperless-teardown.yml
-- import_playbook: playbooks/paperless-install.yml
+# - import_playbook: playbooks/paperless-teardown.yml
+# - import_playbook: playbooks/paperless-install.yml
+- import_playbook: playbooks/paperless-ngx-install.yml

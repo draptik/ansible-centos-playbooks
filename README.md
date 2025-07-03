@@ -20,9 +20,10 @@ This repository automates the setup of a CentOS Stream 10 VM using Ansible. It p
   - You can configure it manually with:
 
 ```bash
-usermod -aG wheel ansible_user
-echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel-nopasswd
-chmod 0440 /etc/sudoers.d/wheel-nopasswd
+sudo usermod -aG wheel ansible_user
+# create the file /etc/sudoers.d/wheel-nopasswd
+sudo echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel-nopasswd
+sudo chmod 0440 /etc/sudoers.d/wheel-nopasswd
 ```
 
 ---
