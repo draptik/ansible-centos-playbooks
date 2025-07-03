@@ -1,0 +1,6 @@
+- name: paperless-ngx
+  hosts: nepenthes
+  become: true
+
+  roles:
+    - role: paperless-docker
