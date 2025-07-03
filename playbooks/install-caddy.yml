@@ -1,6 +1,6 @@
 ---
 - name: Install and run Caddy in Podman
-  hosts: all
+  hosts: moth
   become: yes
   gather_facts: yes
 

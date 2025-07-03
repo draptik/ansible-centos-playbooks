@@ -1,6 +1,6 @@
 ---
 - name: Install and configure Cockpit
-  hosts: all
+  hosts: moth
   become: yes
 
   roles:

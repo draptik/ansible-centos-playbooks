@@ -1,6 +1,6 @@
 ---
 - name: Install and configure Podman
-  hosts: all
+  hosts: moth
   become: yes
 
   roles:

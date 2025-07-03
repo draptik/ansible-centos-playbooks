@@ -1,5 +1,5 @@
 - name: Tear down Paperless stack
-  hosts: all
+  hosts: moth
   become: true
   roles:
     - role: paperless-teardown
