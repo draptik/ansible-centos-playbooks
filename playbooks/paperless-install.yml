@@ -1,9 +1,0 @@
-- name: paperless
-  hosts: motr
-  become: true
-
-  roles:
-    - role: podman
-    - role: cockpit
-    - role: paperless
-

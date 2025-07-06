@@ -1,8 +1,0 @@
-- name: Tear down Paperless stack
-  hosts: moth
-  become: true
-  roles:
-    - role: paperless-teardown
-      vars:
-        remove_images: false
-        remove_volumes: true
