@@ -1,0 +1,90 @@
+# RESTIC INSTALLATION ---------------------------------------------------------
+# NOTE: Restic is not available yet in CentOS Stream 10 EPEL.
+# We have to manually download it.
+- name: Ensure /usr/local/bin exists
+  become: true
+  become_user: root
+  file:
+    path: /usr/local/bin
+    state: directory
+    mode: "0755"
+
+- name: Download Restic static binary
+  become: true
+  become_user: root
+  get_url:
+    url: "https://github.com/restic/restic/releases/download/v0.18.0/restic_0.18.0_linux_amd64.bz2"
+    dest: /usr/local/bin/restic.bz2
+    mode: "0755"
+    force: true
+
+- name: Decompress Restic binary
+  become: true
+  become_user: root
+  command: bzip2 -df /usr/local/bin/restic.bz2
+  args:
+    creates: /usr/local/bin/restic
+
+- name: Ensure Restic is executable
+  become: true
+  become_user: root
+  file:
+    path: /usr/local/bin/restic
+    mode: "0755"
+    state: file
+
+# RESTIC SCRIPT ---------------------------------------------------------------
+- name: Ensure ~/.restic directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.restic"
+    state: directory
+    mode: "0700"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Deploy Restic password file
+  copy:
+    content: "{{ restic_password }}"
+    dest: "/home/{{ ansible_user }}/.restic/restic-password"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+
+- name: Copy backup script
+  become: true
+  become_user: root
+  template:
+    src: "backup.sh.j2"
+    dest: "/usr/local/bin/backup.sh"
+    mode: "0755"
+
+- name: Copy restore script
+  template:
+    src: "restore.sh.j2"
+    dest: "/home/{{ ansible_user }}/paperless-ngx/restore.sh"
+    mode: "0755"
+
+# SYSTEMD SETUP ---------------------------------------------------------------
+- name: Copy systemd service
+  become: true
+  become_user: root
+  ansible.builtin.template:
+    src: backup-paperless.service.j2
+    dest: /etc/systemd/system/backup-paperless.service
+    mode: '0644'
+
+- name: Copy systemd timer
+  become: true
+  become_user: root
+  ansible.builtin.template:
+    src: backup-paperless.timer.j2
+    dest: /etc/systemd/system/backup-paperless.timer
+    mode: '0644'
+
+- name: Start and enable system.d timer for restic backup
+  become: true
+  become_user: root
+  ansible.builtin.systemd:
+    name: backup-paperless.timer
+    state: started
+    enabled: yes

@@ -1,4 +1,4 @@
-- name: paperless-ngx
+- name: paperless-ngx teardown
   hosts: nepenthes
   become: true
   vars_files:
@@ -7,6 +7,5 @@
     ansible_user: "{{ paperless_docker_user }}"
 
   roles:
-    - common
-    - system
-    - paperless-docker
+    - paperless-docker-teardown
+

@@ -1,0 +1,4 @@
+---
+paperless_compose_dir: "/home/{{ ansible_user }}/paperless-ngx"
+paperless_compose_file: "docker-compose.yml"
+

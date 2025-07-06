@@ -1,5 +1,6 @@
 ---
-- name: Ensure packages are installed
+- name: Ensure packages are installed (general purpose tools)
+  become: true
   package:
     name:
       - git
@@ -9,7 +10,8 @@
       - jq
     state: present
 
-- name: Install dependencies
+- name: Ensure packages are installed (dependencies for docker)
+  become: true
   package:
     name:
       - yum-utils
@@ -18,12 +20,14 @@
     state: present
 
 - name: Add Docker repository
+  become: true
   ansible.builtin.command: >
     dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
   args:
     creates: /etc/yum.repos.d/docker-ce.repo
 
 - name: Install Docker Engine
+  become: true
   package:
     name:
       - docker-ce
@@ -32,6 +36,7 @@
     state: present
 
 - name: Enable and start Docker
+  become: true
   service:
     name: docker
     state: started
@@ -41,3 +46,58 @@
   ansible.builtin.shell: docker compose version
   register: docker_compose_version
   changed_when: false
+
+- name: Add ansible_user to group `docker`
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true
+
+- name: Create paperless directory
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.file:
+    path: ~/paperless-ngx
+    state: directory
+    mode: '0755'
+
+- name: Copy paperless resource templates (1/2)
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.template:
+    src: docker-compose.env.j2
+    dest: ~/paperless-ngx/docker-compose.env
+    mode: '0644'
+
+- name: Copy paperless resource templates (2/2)
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: ~/paperless-ngx/docker-compose.yml
+    mode: '0644'
+
+- name: Get infos on container
+  become: true
+  become_user: "{{ ansible_user }}"
+  docker_container_info:
+    name: paperless-ngx-webserver-1
+  register: docker_result
+
+# We have to do this manually, otherwise the containers are restarted automatically because of `restart: unless-stopped` in docker-compose
+- name: Stop docker-compose
+  become: true
+  become_user: "{{ ansible_user }}"
+  community.docker.docker_compose_v2:
+    project_src: ~/paperless-ngx # location of docker-compose.{yml,env} files
+    state: absent
+  when: docker_result.exists
+
+- name: Start docker-compose
+  become: true
+  become_user: "{{ ansible_user }}"
+  community.docker.docker_compose_v2:
+    project_src: ~/paperless-ngx # location of docker-compose.{yml,env} files
+    pull: always # Use with state present to always pull images prior to starting the application.
+    state: present # Specifying present is the same as running docker-compose up

@@ -1,0 +1,11 @@
+[Unit]
+Description=Backup paperless docker volumes to NAS using restic (triggered by systemd timer)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/backup.sh
+
+[Install]
+WantedBy=multi-user.target

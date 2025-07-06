@@ -1,0 +1,12 @@
+- name: paperless-ngx backup
+  hosts: nepenthes
+  become: true
+  vars_files:
+    - ../inventories/development/group_vars/paperless-docker/0_setup.yml
+    - ../inventories/development/group_vars/paperless-docker/1_backup.yml
+  vars:
+    ansible_user: "{{ paperless_docker_user }}"
+    docker_compose_directory: "/home/{{ ansible_user }}/paperless-ngx"
+
+  roles:
+    - paperless-docker-backup

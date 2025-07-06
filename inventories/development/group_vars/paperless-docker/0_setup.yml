@@ -1,0 +1,4 @@
+paperless_admin_password: "{{ vault_paperless_admin_password }}"
+
+# Paperless Docker Setup
+paperless_docker_user: "{{ vault_paperless_docker_user }}"

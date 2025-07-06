@@ -1,0 +1,28 @@
+---
+- name: Ensure Paperless docker-compose stack is stopped and removed
+  community.docker.docker_compose_v2:
+    project_src: "{{ paperless_compose_dir }}"
+    state: absent
+  register: teardown_result
+
+- name: Debug compose teardown result (optional)
+  debug:
+    var: teardown_result
+
+- name: Remove Paperless Docker volumes
+  ansible.builtin.shell: |
+    docker volume rm $(docker volume ls -q --filter "name=paperless")
+  register: volume_removal
+  changed_when: >
+    volume_removal.stderr is not defined or
+    'No such volume' not in volume_removal.stderr
+  failed_when: >
+    volume_removal.rc != 0 and (
+      volume_removal.stderr is not defined or
+      'No such volume' not in volume_removal.stderr
+    )
+
+- name: Debug volume removal output (optional)
+  debug:
+    var: volume_removal.stdout_lines
+

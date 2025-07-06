@@ -7,4 +7,6 @@
 # - import_playbook: playbooks/install-readeck-backup.yml
 # - import_playbook: playbooks/paperless-teardown.yml
 # - import_playbook: playbooks/paperless-install.yml
-- import_playbook: playbooks/paperless-ngx-install.yml
+# - import_playbook: playbooks/paperless-ngx-install.yml
+- import_playbook: playbooks/paperless-ngx-backup.yml
+# - import_playbook: playbooks/paperless-ngx-teardown.yml
