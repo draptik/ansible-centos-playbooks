@@ -2,8 +2,6 @@ nas_user: "{{ vault_nas_user }}"
 nas_name: "{{ vault_nas_name }}"
 
 restic_password_file_location: "/root/restic-pw-paperless"
-restic_repo_name: "{{ vault_restic_repo_name }}"
 
-# Vault
 restic_password: "{{ vault_restic_paperless_password }}"
 restic_paperless_destination_repository: "sftp:{{ vault_restic_nas_user }}@{{ vault_nas_name }}:{{ vault_restic_paperless_repo_name }}"
