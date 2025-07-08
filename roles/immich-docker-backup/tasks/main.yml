@@ -1,0 +1,57 @@
+# RESTIC SCRIPT ---------------------------------------------------------------
+- name: Ensure ~/.restic directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.restic"
+    state: directory
+    mode: "0700"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Deploy Restic password file
+  copy:
+    content: "{{ restic_password }}"
+    dest: "/home/{{ ansible_user }}/.restic/restic-password"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+
+- name: Copy backup script
+  become: true
+  become_user: root
+  template:
+    src: "backup.sh.j2"
+    dest: "/usr/local/bin/backup.sh"
+    mode: "0755"
+
+- name: Copy restore script
+  template:
+    src: "restore.sh.j2"
+    dest: "/home/{{ ansible_user }}/{{ immich_folder_name }}/restore.sh"
+    mode: "0755"
+
+# SYSTEMD SETUP ---------------------------------------------------------------
+- name: Copy systemd service
+  become: true
+  become_user: root
+  ansible.builtin.template:
+    src: backup-immich.service.j2
+    dest: /etc/systemd/system/backup-immich.service
+    mode: '0644'
+
+- name: Copy systemd timer
+  become: true
+  become_user: root
+  ansible.builtin.template:
+    src: backup-immich.timer.j2
+    dest: /etc/systemd/system/backup-immich.timer
+    mode: '0644'
+
+# TODO: activate once initial import is done
+#
+# - name: Start and enable system.d timer for restic backup
+#   become: true
+#   become_user: root
+#   ansible.builtin.systemd:
+#     name: backup-immich.timer
+#     state: started
+#     enabled: yes

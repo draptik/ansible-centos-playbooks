@@ -6,5 +6,8 @@
 # - import_playbook: playbooks/install-readeck.yml
 # - import_playbook: playbooks/install-readeck-backup.yml
 # - import_playbook: playbooks/paperless-ngx-install.yml
-- import_playbook: playbooks/paperless-ngx-backup.yml
+# - import_playbook: playbooks/paperless-ngx-backup.yml
 # - import_playbook: playbooks/paperless-ngx-teardown.yml
+# - import_playbook: playbooks/immich-dummy-setup.yml
+# - import_playbook: playbooks/immich-setup.yml
+- import_playbook: playbooks/immich-backup.yml

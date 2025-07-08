@@ -1,0 +1,5 @@
+nas_user: "{{ vault_nas_user }}"
+nas_name: "{{ vault_nas_name }}"
+
+restic_password: "{{ vault_restic_immich_password }}"
+restic_immich_destination_repository: "sftp:{{ vault_restic_nas_user }}@{{ vault_nas_name }}:{{ vault_restic_immich_repo_name }}"

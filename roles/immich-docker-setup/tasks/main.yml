@@ -1,0 +1,47 @@
+---
+- name: Ensure immich folder exists
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.file:
+    path: "~/{{ immich_folder_name }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy docker compose template
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "~/{{ immich_folder_name }}/docker-compose.yml"
+    mode: '0644'
+
+- name: Copy env template
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.template:
+    src: immich.env.j2
+    dest: "~/{{ immich_folder_name }}/.env"
+    mode: '0644'
+
+- name: Get infos on container
+  become: true
+  become_user: "{{ ansible_user }}"
+  docker_container_info:
+    name: immich-server
+  register: docker_result
+
+- name: Stop docker-compose
+  become: true
+  become_user: "{{ ansible_user }}"
+  community.docker.docker_compose_v2:
+    project_src: "~/{{ immich_folder_name }}"
+    state: absent
+  when: docker_result.exists
+
+- name: Start docker-compose
+  become: true
+  become_user: "{{ ansible_user }}"
+  community.docker.docker_compose_v2:
+    project_src: "~/{{ immich_folder_name }}"
+    pull: always # Use with state present to always pull images prior to starting the application.
+    state: present # Specifying present is the same as running docker-compose up

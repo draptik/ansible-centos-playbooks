@@ -1,0 +1,12 @@
+- name: immich backup
+  hosts: urchin
+  become: yes
+  vars_files:
+    - ../inventories/development/group_vars/immich/0_setup.yml
+    - ../inventories/development/group_vars/immich/1_backup.yml
+  roles:
+    - common
+    - system
+    - docker
+    - restic
+    - immich-docker-backup

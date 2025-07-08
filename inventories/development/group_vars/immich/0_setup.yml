@@ -1,0 +1,11 @@
+ansible_user: "{{ vault_immich_user }}"
+
+immich_folder_name: "immich-app"
+docker_compose_directory: "/home/{{ ansible_user }}/{{ immich_folder_name }}"
+
+immich_timezone: "Europe/Berlin"
+
+# Not used, but this is the default:
+immich_version_fallback: "release"
+
+immich_version: "v1.135.3"

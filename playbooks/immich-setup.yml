@@ -1,0 +1,10 @@
+- name: immich setup
+  hosts: urchin
+  become: yes
+  vars_files:
+    - ../inventories/development/group_vars/immich/0_setup.yml
+  roles:
+    - common
+    - system
+    - docker
+    - immich-docker-setup
