@@ -1,13 +1,11 @@
 ---
-# - import_playbook: playbooks/setup-base.yml
-# - import_playbook: playbooks/install-podman.yml
-# - import_playbook: playbooks/install-cockpit.yml
-# - import_playbook: playbooks/install-caddy.yml
-# - import_playbook: playbooks/install-readeck.yml
-# - import_playbook: playbooks/install-readeck-backup.yml
-# - import_playbook: playbooks/paperless-ngx-install.yml
-# - import_playbook: playbooks/paperless-ngx-backup.yml
-# - import_playbook: playbooks/paperless-ngx-teardown.yml
-# - import_playbook: playbooks/immich-dummy-setup.yml
+- import_playbook: playbooks/base-setup-centos.yml
+- import_playbook: playbooks/caddy-setup.yml
+- import_playbook: playbooks/podman-setup.yml
+- import_playbook: playbooks/cockpit-setup.yml
+- import_playbook: playbooks/readeck-setup.yml
+- import_playbook: playbooks/readeck-backup.yml
+- import_playbook: playbooks/paperless-setup.yml
+- import_playbook: playbooks/paperless-backup.yml
 # - import_playbook: playbooks/immich-setup.yml
-- import_playbook: playbooks/immich-backup.yml
+# - import_playbook: playbooks/immich-backup.yml

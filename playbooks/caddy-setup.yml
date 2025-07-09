@@ -3,6 +3,8 @@
   hosts: moth
   become: yes
   gather_facts: yes
+  vars_files:
+    - ../inventories/development/group_vars/caddy/main.yml
 
   roles:
     - caddy
