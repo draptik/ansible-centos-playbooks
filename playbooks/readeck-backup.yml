@@ -7,4 +7,5 @@
   become_user: "{{ readeck_os_user }}"
 
   roles:
+    - restic
     - readeck-backup

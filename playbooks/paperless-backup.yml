@@ -9,4 +9,8 @@
     docker_compose_directory: "/home/{{ ansible_user }}/paperless-ngx"
 
   roles:
+    - common
+    - system
+    - docker
+    - restic
     - paperless-docker-backup

@@ -3,8 +3,8 @@
 # - import_playbook: playbooks/caddy-setup.yml
 # - import_playbook: playbooks/podman-setup.yml
 # - import_playbook: playbooks/cockpit-setup.yml
-# - import_playbook: playbooks/readeck-setup.yml
-# - import_playbook: playbooks/readeck-backup.yml
+- import_playbook: playbooks/readeck-setup.yml
+- import_playbook: playbooks/readeck-backup.yml
 # - import_playbook: playbooks/paperless-setup.yml
 # - import_playbook: playbooks/paperless-backup.yml
 # - import_playbook: playbooks/immich-setup.yml
