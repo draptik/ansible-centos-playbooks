@@ -46,12 +46,10 @@
     dest: /etc/systemd/system/backup-immich.timer
     mode: '0644'
 
-# TODO: activate once initial import is done
-#
-# - name: Start and enable system.d timer for restic backup
-#   become: true
-#   become_user: root
-#   ansible.builtin.systemd:
-#     name: backup-immich.timer
-#     state: started
-#     enabled: yes
+- name: Start and enable system.d timer for restic backup
+  become: true
+  become_user: root
+  ansible.builtin.systemd:
+    name: backup-immich.timer
+    state: started
+    enabled: yes
