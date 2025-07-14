@@ -35,7 +35,7 @@
   become: true
   become_user: "{{ ansible_user }}"
   ansible.builtin.template:
-    src: diun-provider.yml.j2
+    src: "{{ diun_provider_template | default('diun-provider.yml.j2') }}"
     dest: "~/{{ diun_folder_name }}/diun-provider.yml"
     mode: '0644'
 
