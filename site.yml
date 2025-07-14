@@ -9,4 +9,4 @@
 # - import_playbook: playbooks/paperless-backup.yml
 # - import_playbook: playbooks/immich-setup.yml
 # - import_playbook: playbooks/immich-backup.yml
-- import_playbook: playbooks/diun-setup.yml
+# - import_playbook: playbooks/diun-setup.yml
