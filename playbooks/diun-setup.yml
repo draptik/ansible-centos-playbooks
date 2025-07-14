@@ -1,5 +1,5 @@
 - name: diun setup
-  hosts: nepenthes
+  hosts: nepenthes,urchin
   become: yes
   vars_files:
     - ../inventories/development/group_vars/diun/0_setup.yml
