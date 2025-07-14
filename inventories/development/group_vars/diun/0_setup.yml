@@ -1,0 +1,6 @@
+diun_docker_user: "{{ vault_diun_docker_user }}"
+diun_folder_name: "diun-app"
+diun_container_name: "diun"
+diun_timezone: "Europe/Berlin"
+diun_pushover_token: "{{ vault_diun_pushover_token }}"
+diun_pushover_recipient: "{{ vault_diun_pushover_recipient }}"

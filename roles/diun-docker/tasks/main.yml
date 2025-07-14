@@ -1,0 +1,64 @@
+---
+- name: Ensure diun folder exists
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.file:
+    path: "~/{{ diun_folder_name }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure diun data folder exists
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.file:
+    path: "~/{{ diun_folder_name }}/data"
+    state: directory
+    mode: '0755'
+
+- name: Copy docker compose template
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "~/{{ diun_folder_name }}/docker-compose.yml"
+    mode: '0644'
+
+- name: Copy diun config template
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.template:
+    src: diun.yml.j2
+    dest: "~/{{ diun_folder_name }}/diun.yml"
+    mode: '0644'
+
+- name: Copy diun provider config template
+  become: true
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.template:
+    src: diun-provider.yml.j2
+    dest: "~/{{ diun_folder_name }}/diun-provider.yml"
+    mode: '0644'
+
+- name: Get infos on container
+  become: true
+  become_user: "{{ ansible_user }}"
+  docker_container_info:
+    name: "{{ diun_container_name }}"
+  register: docker_result
+
+- name: Stop docker-compose
+  become: true
+  become_user: "{{ ansible_user }}"
+  community.docker.docker_compose_v2:
+    project_src: "~/{{ diun_folder_name }}"
+    state: absent
+  when: docker_result.exists
+
+- name: Start docker-compose
+  become: true
+  become_user: "{{ ansible_user }}"
+  community.docker.docker_compose_v2:
+    project_src: "~/{{ diun_folder_name }}"
+    pull: always # Use with state present to always pull images prior to starting the application.
+    state: present # Specifying present is the same as running docker-compose up
+

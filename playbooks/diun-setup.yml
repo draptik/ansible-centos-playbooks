@@ -1,0 +1,13 @@
+- name: diun setup
+  hosts: nepenthes
+  become: yes
+  vars_files:
+    - ../inventories/development/group_vars/diun/0_setup.yml
+  vars:
+    ansible_user: "{{ diun_docker_user }}"
+
+  roles:
+    # - common
+    # - system
+    # - docker
+    - diun-docker
