@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# === Usage Check ===
+# ==== Usage Check ====
 if [[ -z "$1" ]]; then
   echo "Usage: $0 <backup-target-name>"
   echo "Example: $0 readeck"
@@ -8,20 +8,28 @@ if [[ -z "$1" ]]; then
 fi
 
 TARGET="$1"
+
 # ==== Configuration ====
-LOCAL_REPO="/volume1/backup/restic-${TARGET}"                 # path to local/NAS Restic repo
-PCLOUD_REPO="rclone:pcloud:backups/restic-${TARGET}"          # pCloud repo via rclone
-RESTIC_PASSWORD_FILE="$HOME/restic/restic-password-${TARGET}" # same password used in both repos
+LOCAL_REPO="/volume1/backup/restic-${TARGET}"
+PCLOUD_REPO="rclone:pcloud:backups/restic-${TARGET}"
+RESTIC_PASSWORD_FILE="$HOME/restic/restic-password-${TARGET}"
 LOG_FILE="$HOME/restic-logs/restic-${TARGET}.log"
+
+# ==== Timestamped logger ====
+log() {
+  local timestamp
+  timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+  echo "[$timestamp] $*" | tee -a "$LOG_FILE"
+}
 
 # ==== Pre-flight checks ====
 if ! command -v restic >/dev/null; then
-  echo "❌ Error: restic is not installed." | tee -a "$LOG_FILE"
+  log "❌ Error: restic is not installed."
   exit 1
 fi
 
 if [[ ! -f "$RESTIC_PASSWORD_FILE" ]]; then
-  echo "❌ Error: Password file not found at $RESTIC_PASSWORD_FILE" | tee -a "$LOG_FILE"
+  log "❌ Error: Password file not found at $RESTIC_PASSWORD_FILE"
   exit 1
 fi
 
@@ -30,33 +38,29 @@ export RESTIC_PASSWORD_FILE="$RESTIC_PASSWORD_FILE"
 export RESTIC_FROM_PASSWORD_FILE="$RESTIC_PASSWORD_FILE"
 
 # ==== Ensure target repo exists ====
-echo "🔍 Checking if target Restic repo at $PCLOUD_REPO exists..." | tee -a "$LOG_FILE"
+log "🔍 Checking if target Restic repo at $PCLOUD_REPO exists..."
 if ! restic -r "$PCLOUD_REPO" snapshots >/dev/null 2>&1; then
-  echo "⚠️  Target repo not found. Initializing..." | tee -a "$LOG_FILE"
+  log "⚠️  Target repo not found. Initializing..."
   if restic -r "$PCLOUD_REPO" init >>"$LOG_FILE" 2>&1; then
-    echo "✅ Initialized new Restic repo at $PCLOUD_REPO." | tee -a "$LOG_FILE"
+    log "✅ Initialized new Restic repo at $PCLOUD_REPO."
   else
-    echo "❌ Failed to initialize target repo. Aborting." | tee -a "$LOG_FILE"
+    log "❌ Failed to initialize target repo. Aborting."
     exit 2
   fi
 else
-  echo "✅ Target repo already exists." | tee -a "$LOG_FILE"
+  log "✅ Target repo already exists."
 fi
 
 # ==== Run copy ====
-echo "🚀 Starting restic snapshot copy from $LOCAL_REPO to $PCLOUD_REPO"
-echo "[$(date)] Starting restic copy..." >>"$LOG_FILE"
+log "🚀 Starting restic snapshot copy from $LOCAL_REPO to $PCLOUD_REPO"
+restic -r "$PCLOUD_REPO" copy --from-repo "$LOCAL_REPO" 2>&1 | while IFS= read -r line; do log "$line"; done
 
-restic -r "$PCLOUD_REPO" copy --from-repo "$LOCAL_REPO" >>"$LOG_FILE" 2>&1
-
-RETVAL=$?
+RETVAL=${PIPESTATUS[0]}
 
 if [[ $RETVAL -eq 0 ]]; then
-  echo "✅ Restic snapshots successfully copied to pCloud."
-  echo "[$(date)] ✅ Copy successful." >>"$LOG_FILE"
+  log "✅ Restic snapshots successfully copied to pCloud."
 else
-  echo "❌ Restic copy failed. Check $LOG_FILE for details."
-  echo "[$(date)] ❌ Copy failed with exit code $RETVAL." >>"$LOG_FILE"
+  log "❌ Restic copy failed. Exit code: $RETVAL"
 fi
 
-exit $RETVAL
+exit "$RETVAL"
