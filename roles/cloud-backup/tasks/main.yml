@@ -1,0 +1,42 @@
+- name: Debug ansible_user
+  debug:
+    var: ansible_user
+
+- name: Debug expanded paths
+  debug:
+    msg:
+      - "restic_base_dir={{ restic_base_dir }}"
+      - "restic_log_dir={{ restic_log_dir }}"
+      - "restic_script_path={{ restic_script_path }}"
+
+- name: Debug password var existence
+  debug:
+    msg: "Password for {{ item.name }} is {{ lookup('vars', item.pw) | default('MISSING', true) }}"
+  loop: "{{ restic_targets }}"
+
+- name: Ensure required directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ restic_base_dir }}"
+    - "{{ restic_log_dir }}"
+    - "{{ restic_script_path | dirname }}"
+
+- name: Deploy restic password files
+  ansible.builtin.copy:
+    content: "{{ lookup('vars', item.pw) }}"
+    dest: "{{ restic_base_dir }}/restic-password-{{ item.name }}"
+    mode: '0600'
+    group: "users"
+    owner: "{{ ansible_user }}"
+  loop: "{{ restic_targets }}"
+
+- name: Deploy backup script
+  ansible.builtin.template:
+    src: copy-to-cloud.sh.j2
+    dest: "{{ restic_script_path }}/copy-to-cloud.sh"
+    mode: '0755'
+    group: "users"
+    owner: "{{ ansible_user }}"

@@ -1,0 +1,6 @@
+cloud_backup_restic_target_base: "rclone:pcloud:backups"
+cloud_backup_restic_nas_backup_base_folder: "backups"
+
+cloud_backup_restic_readeck_password: "{{ vault_restic_readeck_password }}"
+cloud_backup_restic_immich_password: "{{ vault_restic_immich_password }}"
+cloud_backup_restic_paperless_password: "{{ vault_restic_paperless_password }}"

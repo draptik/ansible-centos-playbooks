@@ -1,0 +1,12 @@
+restic_targets:
+  - name: immich
+    pw: cloud_backup_restic_immich_password
+  - name: paperless
+    pw: cloud_backup_restic_paperless_password
+  - name: readeck
+    pw: cloud_backup_restic_readeck_password
+
+base_folder: "/var/services/homes"
+restic_base_dir: "{{ base_folder }}/{{ ansible_user }}/restic"
+restic_log_dir: "{{ base_folder }}/{{ ansible_user }}/restic-logs"
+restic_script_path: "{{ base_folder }}/{{ ansible_user }}/restic-scripts"

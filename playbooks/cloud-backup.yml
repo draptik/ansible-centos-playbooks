@@ -1,0 +1,6 @@
+- name: Cloud Backup setup
+  hosts: turtle
+  become: true
+
+  roles:
+    - cloud-backup

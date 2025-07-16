@@ -1,6 +1,6 @@
 ---
 - name: Base configuration
-  hosts: all
+  hosts: urchin,nepenthes,moth
   become: yes
   roles:
     - common
